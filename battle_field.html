@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>対戦フィールド</title>
 <style>
   :root{
@@ -2286,6 +2287,55 @@ function startBattleField(){
   logLine('自動戦闘を開始します。前衛キャラがすばやさ順に行動します。');
   battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
 }
+</script>
+<script>
+  // ============================================================
+  // スマホを横向きにしたら全画面表示にする
+  // （全画面APIはユーザー操作の中でしか呼べないブラウザが多いため、
+  //   画面の向き変化イベントに加えて、最初のタップ・クリックでも試みる）
+  // ============================================================
+  (function(){
+    function isLandscape(){
+      if(screen.orientation && screen.orientation.type){
+        return screen.orientation.type.indexOf('landscape') === 0;
+      }
+      return window.innerWidth > window.innerHeight;
+    }
+    function requestFullscreenSafe(){
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      if(req && !document.fullscreenElement && !document.webkitFullscreenElement){
+        req.call(el).catch(() => {});
+      }
+    }
+    function exitFullscreenSafe(){
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if(exit && (document.fullscreenElement || document.webkitFullscreenElement)){
+        exit.call(document).catch(() => {});
+      }
+    }
+    function handleOrientationChange(){
+      if(isLandscape()){
+        requestFullscreenSafe();
+      } else {
+        exitFullscreenSafe();
+      }
+    }
+    if(screen.orientation && screen.orientation.addEventListener){
+      screen.orientation.addEventListener('change', handleOrientationChange);
+    } else {
+      window.addEventListener('orientationchange', handleOrientationChange);
+    }
+    // 一部のブラウザは向き変化イベントの中でrequestFullscreenを拒否するため、
+    // 最初のタップ／クリック時にも横向きなら全画面化を試みる。
+    ['touchend', 'click'].forEach(evt => {
+      window.addEventListener(evt, function onceHandler(){
+        if(isLandscape()) requestFullscreenSafe();
+      }, { once:true, passive:true });
+    });
+    // 起動時点ですでに横向きだった場合にも備える
+    window.addEventListener('load', () => { if(isLandscape()) requestFullscreenSafe(); });
+  })();
 </script>
 </body>
 </html>
