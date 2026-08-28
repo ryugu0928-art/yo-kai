@@ -475,6 +475,10 @@
   .battle-screen .slot.party-member{
     pointer-events:none;
   }
+  /* 必殺技ゲージ選択モード中は、満タンの味方キャラをタップできるようにする */
+  .battle-screen .slot.party-member.ult-selectable{
+    pointer-events:auto;
+  }
 
   .battle-screen .token{
     border-radius:50%;
@@ -905,6 +909,56 @@
     z-index:1;
   }
 
+  /* ---- 被ダメージ数値のポップアップ表示 ---- */
+  @keyframes damagePopUp{
+    0%{ opacity:0; transform:translate(-50%, 0) scale(0.6); }
+    12%{ opacity:1; transform:translate(-50%, -6px) scale(1.15); }
+    22%{ transform:translate(-50%, -10px) scale(1); }
+    75%{ opacity:1; transform:translate(-50%, -34px) scale(1); }
+    100%{ opacity:0; transform:translate(-50%, -46px) scale(0.95); }
+  }
+  .battle-screen .damage-popup{
+    position:absolute;
+    left:50%;
+    top:20%;
+    transform:translate(-50%, 0);
+    white-space:nowrap;
+    font-weight:900;
+    letter-spacing:1px;
+    color:#fff;
+    text-shadow:
+      -1.5px -1.5px 0 #8f1414, 1.5px -1.5px 0 #8f1414,
+      -1.5px  1.5px 0 #8f1414, 1.5px  1.5px 0 #8f1414,
+      0 3px 6px rgba(0,0,0,0.5);
+    font-size:20px;
+    z-index:27;
+    pointer-events:none;
+    animation:damagePopUp 1s ease-out forwards;
+  }
+  .battle-screen .damage-popup.critical{
+    font-size:26px;
+    color:#ffe14a;
+    text-shadow:
+      -1.5px -1.5px 0 #a86a00, 1.5px -1.5px 0 #a86a00,
+      -1.5px  1.5px 0 #a86a00, 1.5px  1.5px 0 #a86a00,
+      0 0 10px rgba(255,210,60,0.85), 0 3px 6px rgba(0,0,0,0.5);
+  }
+  .battle-screen .damage-popup.heal{
+    color:#8fe3a0;
+    text-shadow:
+      -1.5px -1.5px 0 #14521f, 1.5px -1.5px 0 #14521f,
+      -1.5px  1.5px 0 #14521f, 1.5px  1.5px 0 #14521f,
+      0 3px 6px rgba(0,0,0,0.5);
+  }
+  .battle-screen .damage-popup.miss{
+    font-size:16px;
+    color:#cfe6ff;
+    text-shadow:
+      -1.5px -1.5px 0 #123a5c, 1.5px -1.5px 0 #123a5c,
+      -1.5px  1.5px 0 #123a5c, 1.5px  1.5px 0 #123a5c,
+      0 3px 6px rgba(0,0,0,0.5);
+  }
+
   /* ---- 攻撃対象を示す三角矢印 ---- */
   .battle-screen .target-arrow{
     position:absolute;
@@ -922,6 +976,213 @@
   @keyframes arrowBounce{
     0%{ transform:translateX(-50%) translateY(0); }
     100%{ transform:translateX(-50%) translateY(6px); }
+  }
+
+  /* ============================================================
+     必殺技ゲージタップ選択 & 必殺技チャージ・ミニゲーム
+  ============================================================ */
+  .battle-screen .ult-select-hint{
+    position:absolute;
+    top:2%;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(20,10,8,0.75);
+    color:var(--gold-light);
+    border:2px solid var(--gold);
+    border-radius:14px;
+    padding:6px 18px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    z-index:40;
+    white-space:nowrap;
+  }
+
+  .battle-screen .action-menu-left .btn-waza.ult-armed{
+    animation:pulseGlow 1s ease-in-out infinite;
+  }
+
+  .slot.ult-ready .ultgauge{
+    animation:ultReadyPulse 1s ease-in-out infinite;
+  }
+  @keyframes ultReadyPulse{
+    0%,100%{ filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4)) drop-shadow(0 0 2px rgba(255,220,120,0.6)); }
+    50%{ filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4)) drop-shadow(0 0 10px rgba(255,220,120,0.95)); }
+  }
+  .slot.ult-selectable{
+    cursor:pointer;
+  }
+  .slot.ult-selectable .token{
+    animation:ultSelectablePulse 0.9s ease-in-out infinite;
+  }
+  @keyframes ultSelectablePulse{
+    0%,100%{ box-shadow:0 0 0 rgba(255,220,120,0); transform:scale(1); }
+    50%{ box-shadow:0 0 18px 4px rgba(255,220,120,0.85); transform:scale(1.05); }
+  }
+
+  .ult-overlay{
+    position:absolute;
+    inset:0;
+    z-index:100;
+    background:rgba(5,8,16,0.78);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease;
+  }
+  .ult-overlay.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .ult-overlay .ult-title{
+    position:absolute;
+    top:8%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--gold-light);
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:8px;
+    text-shadow:0 0 16px rgba(232,200,116,0.6);
+    z-index:2;
+  }
+  .ult-overlay .ult-caster-name{
+    position:absolute;
+    top:16%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--paper);
+    font-size:13px;
+    letter-spacing:3px;
+    z-index:2;
+  }
+  .ult-overlay .ult-ring-wrap{
+    position:relative;
+    width:min(58vh, 320px);
+    height:min(58vh, 320px);
+  }
+  .ult-overlay .ult-frame{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:5px solid var(--gold);
+    background:radial-gradient(circle at 50% 40%, rgba(40,30,20,0.9), rgba(10,8,14,0.95));
+    box-shadow:0 0 40px rgba(232,200,116,0.35), inset 0 0 30px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  .ult-overlay .ult-progress-ring{
+    position:absolute;
+    inset:-5px;
+    width:calc(100% + 10px);
+    height:calc(100% + 10px);
+    pointer-events:none;
+    transform:rotate(-90deg);
+  }
+  .ult-overlay .ult-progress-bg{
+    fill:none; stroke:rgba(255,255,255,0.15); stroke-width:5;
+  }
+  .ult-overlay .ult-progress-fg{
+    fill:none; stroke:var(--gold-light); stroke-width:5; stroke-linecap:round;
+    transition:stroke-dashoffset 0.15s linear;
+  }
+  .ult-overlay .ult-instruction{
+    position:absolute;
+    bottom:6%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--paper);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(20,10,8,0.6);
+    border:1.5px solid var(--gold);
+    border-radius:12px;
+    padding:6px 20px;
+    white-space:nowrap;
+    z-index:2;
+  }
+
+  /* ---- 「打て！」黄色円盤 ---- */
+  .ult-disc{
+    position:absolute;
+    width:34px; height:34px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6c8, #e8c020 65%, #b98d10);
+    box-shadow:0 0 10px rgba(255,220,80,0.8);
+    transform:translate(-50%,-50%);
+    cursor:pointer;
+    transition:opacity 0.15s ease, transform 0.15s ease;
+  }
+  .ult-disc.hit{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(1.8);
+  }
+
+  /* ---- 「なぞれ！」なぞり描画 ---- */
+  .ult-trace-svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+  .ult-trace-target{ fill:none; stroke:rgba(255,255,255,0.35); stroke-width:4; stroke-dasharray:6 6; }
+  .ult-trace-drawn{ fill:none; stroke:var(--gold-light); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* ---- 「回せ！」回転 ---- */
+  .ult-spin-svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:grab; }
+  .ult-spin-dot{ fill:var(--gold-light); }
+  .ult-spin-track{ fill:none; stroke:rgba(255,255,255,0.2); stroke-width:4; }
+
+  /* ---- 「合わせろ！」時計あわせ ---- */
+  .ult-clock-svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+  .ult-clock-face{ fill:none; stroke:rgba(255,255,255,0.25); stroke-width:2; }
+  .ult-clock-num{ fill:rgba(255,255,255,0.55); font-size:13px; font-weight:700; text-anchor:middle; dominant-baseline:middle; }
+  .ult-clock-num.glow{
+    fill:var(--gold-light);
+    text-shadow:0 0 10px rgba(255,220,120,0.9);
+    animation:ultClockGlow 0.6s ease-in-out infinite;
+  }
+  @keyframes ultClockGlow{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.5; }
+  }
+  .ult-clock-hand{
+    stroke:var(--gold-light); stroke-width:4; stroke-linecap:round;
+    cursor:grab;
+    filter:drop-shadow(0 0 4px rgba(255,220,120,0.8));
+  }
+
+  /* ---- 必殺技発動演出 ---- */
+  .ult-cast-banner{
+    position:absolute;
+    top:38%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.6);
+    z-index:60;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+  }
+  .ult-cast-banner.show{
+    animation:ultBannerIn 2.2s ease forwards;
+  }
+  @keyframes ultBannerIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.6); }
+    12%{ opacity:1; transform:translate(-50%,-50%) scale(1.08); }
+    20%{ transform:translate(-50%,-50%) scale(1); }
+    85%{ opacity:1; }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(1); }
+  }
+  .ult-cast-banner .who{
+    font-size:14px;
+    letter-spacing:4px;
+    color:var(--gold-light);
+    margin-bottom:6px;
+    text-shadow:0 0 10px rgba(0,0,0,0.8);
+  }
+  .ult-cast-banner .name{
+    font-size:clamp(26px, 5vw, 44px);
+    font-weight:900;
+    letter-spacing:4px;
+    color:#fff;
+    text-shadow:0 0 20px rgba(232,200,116,0.9), 0 4px 6px rgba(0,0,0,0.8);
   }
 </style>
 </head>
@@ -1032,6 +1293,30 @@
       <div class="action-menu">
         <button type="button" class="btn-oharai">おはらい</button>
         <button type="button" class="btn-item" disabled>アイテム</button>
+      </div>
+
+      <!-- 必殺技ゲージ選択時のヒント表示 -->
+      <div class="ult-select-hint" id="ultSelectHint" style="display:none;">ゲージが満タンのキャラをタップ！</div>
+
+      <!-- 必殺技チャージ・ミニゲーム オーバーレイ -->
+      <div class="ult-overlay" id="ultOverlay">
+        <div class="ult-title" id="ultOverlayTitle">必殺技チャージ</div>
+        <div class="ult-caster-name" id="ultCasterName"></div>
+        <div class="ult-ring-wrap" id="ultRingWrap">
+          <svg class="ult-progress-ring" viewBox="0 0 320 320">
+            <circle class="ult-progress-bg" cx="160" cy="160" r="150"></circle>
+            <circle class="ult-progress-fg" id="ultProgressFg" cx="160" cy="160" r="150"
+              stroke-dasharray="942.5" stroke-dashoffset="942.5"></circle>
+          </svg>
+          <div class="ult-frame" id="ultFrame"></div>
+        </div>
+        <div class="ult-instruction" id="ultInstruction"></div>
+      </div>
+
+      <!-- 必殺技発動時のバナー演出 -->
+      <div class="ult-cast-banner" id="ultCastBanner">
+        <div class="who" id="ultCastWho"></div>
+        <div class="name" id="ultCastName"></div>
       </div>
     </div>
   </div>
@@ -1326,6 +1611,24 @@ const characterPool = [
     possess:{ name:'大明神の加護', desc:'HPがだんだん回復する', kind:'buff', hot:true, hotRate:0.05 },
     ult:{ name:'必中大当たり！', power:140, target:'all' }
   },
+  { id:'p19', cls:'c-teal', label:'S', name:'ヤミまろ', rank:'S', no:242, zoku:'ウスラカゲ族', maxHp:278, slackSeikaku:'sunao',
+    stats:{ chikara:107, mamori:96, youjutsu:131, subayasa:149 },
+    skill:{ name:'きゅうきょくのヤミ', desc:'とりつきが必ず成功する', possessAlwaysSucceeds:true },
+    tokui:'水', jaku:'雷',
+    physical:{ name:'ドクロ割り', power:75 },
+    magic:{ name:'水流の術', power:50, element:'水' },
+    possess:{ name:'闇の力', desc:'HPがどんどん減ってしまう', kind:'debuff', dot:true, dotRate:0.05 },
+    ult:{ name:'常闇の呪い', power:140, target:'all', debuff:'stun', desc:'全体攻撃＋行動不能' }
+  },
+  { id:'p20', cls:'c-purple', label:'T', name:'女郎蜘蛛', rank:'S', no:283, zoku:'ブキミー族', maxHp:255, slackSeikaku:'sunao',
+    stats:{ chikara:139, mamori:102, youjutsu:104, subayasa:138 },
+    skill:{ name:'大将', desc:'敵を倒すたび攻撃力大アップ', chikaraOnEnemyFaint:true },
+    tokui:'土', jaku:'風',
+    physical:{ name:'ワンツーパンチ', power:15, hits:2 },
+    magic:{ name:'いん石の術', power:80, element:'土' },
+    possess:{ name:'くもの糸にからめる', desc:'すばやさ大ダウン', kind:'debuff', grade:'large', scope:'single', stat:'subayasa' },
+    ult:{ name:'桃色ドトンドトーン', power:290, target:'single' }
+  },
 ];
 const MAX_ROSTER = 6;
 let selectedIds = []; // 選ばれた順が、そのまま「前衛→後衛」の並びになる
@@ -1333,14 +1636,16 @@ let actionSeikakuMap = {}; // charId -> 行動性格id（編成時にプレイ�
 const DEFAULT_ACTION_SEIKAKU = 'tanki';
 
 // CPU（対戦相手）側のキャラクター。プレイヤー側と同じく6体で、前衛3体・後衛3体を編成する。
-const enemyPool = [
-  { id:'e1', cls:'c-purple', label:'?', name:'てきキャラA', rank:'B', stats:{ chikara:60, mamori:50, youjutsu:40, subayasa:55 } },
-  { id:'e2', cls:'c-red',    label:'?', name:'てきキャラB', rank:'A', stats:{ chikara:70, mamori:40, youjutsu:55, subayasa:65 } },
-  { id:'e3', cls:'c-green',  label:'?', name:'てきキャラC', rank:'C', stats:{ chikara:50, mamori:60, youjutsu:60, subayasa:45 } },
-  { id:'e4', cls:'c-teal',   label:'?', name:'てきキャラD', rank:'D', stats:{ chikara:58, mamori:55, youjutsu:45, subayasa:70 } },
-  { id:'e5', cls:'c-orange', label:'?', name:'てきキャラE', rank:'S', stats:{ chikara:80, mamori:65, youjutsu:35, subayasa:50 } },
-  { id:'e6', cls:'c-pink',   label:'?', name:'てきキャラF', rank:'E', stats:{ chikara:45, mamori:35, youjutsu:65, subayasa:75 } },
-];
+// 敵の編成は、プレイヤーと同じ characterPool（実在するキャラクター）からランダムに選ぶ。
+// プレイヤーが選んだキャラとはなるべく被らないようにし、候補が足りない場合のみ被りを許容する。
+function pickEnemyPool(excludeIds){
+  const excluded = new Set(excludeIds || []);
+  const candidates = characterPool.filter(c => !excluded.has(c.id));
+  const pool = candidates.length >= MAX_ROSTER ? candidates : characterPool.slice();
+  // シャッフルして先頭 MAX_ROSTER 体を採用する
+  const shuffled = pool.map(c => ({ c, r: Math.random() })).sort((a, b) => a.r - b.r).map(x => x.c);
+  return shuffled.slice(0, MAX_ROSTER);
+}
 
 const rosterSlotsEl = document.getElementById('rosterSlots');
 const rosterPoolEl = document.getElementById('rosterPool');
@@ -1448,19 +1753,21 @@ function startBattleField(){
     const actionSeikakuId = actionSeikakuMap[c.id] || DEFAULT_ACTION_SEIKAKU;
     const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, actionSeikakuId);
     return {
-      id:i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:0, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null,
+      id:i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
       slackSeikaku: getSlackPersonality(c.slackSeikaku), actionSeikaku: getActionPersonality(actionSeikakuId)
     };
   });
 
-  // CPU側の編成。プレイヤーと同じく6体（前衛3体・後衛3体）を持たせる。CPUの行動性格はランダムに割り当てる。
+  // CPU側の編成。プレイヤーと同じく6体（前衛3体・後衛3体）を持たせる。
+  // 実在するキャラクター（characterPool）からランダムに選び、CPUの行動性格はランダムに割り当てる。
+  const enemyPool = pickEnemyPool(chosen.map(c => c.id));
   let enemyParty = enemyPool.slice(0, MAX_ROSTER).map((c, i) => {
     const baseStats = c.stats || { chikara:60, mamori:60, youjutsu:60, subayasa:60 };
     const baseHp = c.maxHp || 100;
     const enemyActionSeikakuId = ACTION_PERSONALITIES[Math.floor(Math.random() * ACTION_PERSONALITIES.length)].id;
     const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, enemyActionSeikakuId);
     return {
-      id:'e' + i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:0, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null,
+      id:'e' + i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
       slackSeikaku: getSlackPersonality(c.slackSeikaku || 'sunao'), actionSeikaku: getActionPersonality(enemyActionSeikakuId)
     };
   });
@@ -1582,6 +1889,15 @@ function startBattleField(){
     return effect;
   }
 
+  // 「闇の力」等、時間経過でじわじわHPが減っていくデバフ効果を付与する（デバフなのでずっと解けない）。
+  function applyDotEffect(target, { name, rate = 0.05 }){
+    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind: 'debuff', grade: null, scope: null, stat: null, rate: 0, duration: null, name, dot: true, dotRate: rate };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+
   // 「行動不能」系のとりつき効果を付与する（デバフなので、いったんかかるとずっと解けない）。
   function applyStunEffect(target, { name }){    if(!target.possessEffects) target.possessEffects = [];
     const effect = { kind: 'debuff', grade: null, scope: null, stat: null, rate: 0, duration: null, name, stun: true };
@@ -1618,6 +1934,25 @@ function startBattleField(){
         if(healed > 0){
           updateHpBar(c);
           logLine(`${c.name} は${e.name}の効果でHPが${healed}回復した！`, 'heal');
+          showDamagePopup(c, `+${healed}`, 'heal');
+        }
+      }
+    });
+    // 「闇の力」等、時間経過でHPが減っていく系のデバフは、行動のたびにダメージを与える
+    let diedFromDot = false;
+    c.possessEffects.forEach(e => {
+      if(e.dot && e.kind === 'debuff' && c.alive){
+        const dmgAmount = Math.max(1, Math.round(c.maxHp * e.dotRate));
+        c.hp = Math.max(0, c.hp - dmgAmount);
+        updateHpBar(c);
+        logLine(`${c.name} は${e.name}の効果でHPが${dmgAmount}減った…`, 'critical');
+        showDamagePopup(c, String(dmgAmount));
+        if(c.hp <= 0 && c.alive){
+          c.alive = false;
+          updateHpBar(c);
+          logLine(`${c.name} を倒した！`, 'dead');
+          triggerAllyFaintBonus(c);
+          diedFromDot = true;
         }
       }
     });
@@ -1625,6 +1960,10 @@ function startBattleField(){
     c.possessEffects.forEach(e => { if(e.kind === 'buff') e.duration -= 1; });
     c.possessEffects = c.possessEffects.filter(e => e.kind !== 'buff' || e.duration > 0);
     updateAuraEffect(c);
+    if(diedFromDot){
+      forceSwapIfFrontWiped();
+      forceSwapEnemyIfFrontWiped();
+    }
   }
 
   // 現在かかっているバフ／デバフの状態に応じて、キャラにオーラのCSSクラスを付け外しする。
@@ -1701,6 +2040,14 @@ function startBattleField(){
   }
 
   // 妖術攻撃ダメージ = ようじゅつ/2 - (対象のまもり)/4 + 技の威力/2　(±10%のランダムなブレ)
+  // 「とりつき（デバフ）」の成功率。妖術が高いほど、また対象のすばやさが低いほど成功しやすい。
+  function calcPossessSuccessChance(actor, target){
+    const atk = getEffectiveStats(actor).youjutsu;
+    const def = getEffectiveStats(target).subayasa;
+    const chance = 0.75 + (atk - def) / 500;
+    return Math.max(0.3, Math.min(0.95, chance));
+  }
+
   function calcMagicDamage(attacker, defender, power){
     const atkStats = getEffectiveStats(attacker);
     const defStats = getEffectiveStats(defender);
@@ -1808,45 +2155,66 @@ function startBattleField(){
   // 1回の行動で複数回攻撃する技（例：ブシニャンの「閃光ぎり」3回攻撃）の処理。
   // ヒットごとに毎回独立で回避判定・クリティカル判定・属性判定を行う。
   // 対象が途中で倒れた場合は、そこで残りの攻撃を打ち切る。
+  // 各ヒットの間には少し間隔（HIT_INTERVAL_MS）を空けて演出し、全ヒット終了後に onDone を呼ぶ。
   const ATTACK_KIND_LABEL = { physical:'物理攻撃', magic:'妖術攻撃' };
-  function performMultiHitAttack(actor, target, kind, power, element, hits, label){
+  const HIT_INTERVAL_MS = 140; // 複数回攻撃の1発ごとの間隔
+  function performMultiHitAttack(actor, target, kind, power, element, hits, label, onDone){
     const actionLabel = label || ATTACK_KIND_LABEL[kind] || '攻撃';
     let totalDamage = 0;
     let hitCount = 0;
     let anyCritical = false;
-    for(let i = 0; i < hits; i++){
-      if(!target.alive) break;
+    let i = 0;
+
+    function finish(){
+      if(hits > 1 && hitCount > 0){
+        logLine(`${actor.name} の${actionLabel}は合計 ${totalDamage} ダメージ！（${hitCount}/${hits}発命中）`, anyCritical ? 'critical' : undefined);
+      }
+      if(onDone) onDone();
+    }
+
+    function nextHit(){
+      if(i >= hits || !target.alive){
+        finish();
+        return;
+      }
       const result = resolveAttack(actor, target, kind, power, element);
       if(!result.hit){
         logLine(`${actor.name} の${actionLabel}！(${i+1}/${hits}発目) → ${target.name} はかわした！`, 'miss');
-        continue;
-      }
-      const ignoreGuard = kind === 'physical' && actor.skill && actor.skill.ignoreGuard;
-      const dmg = applyDamageTo(target, result.damage, ignoreGuard);
-      totalDamage += dmg;
-      hitCount++;
-      if(result.critical) anyCritical = true;
-      // 「吸収」属性の妖術は、与えたダメージの半分だけ自分のHPを回復する
-      if(kind === 'magic' && element === '吸収' && dmg > 0){
-        const healAmount = Math.max(1, Math.round(dmg / 2));
-        const before = actor.hp;
-        actor.hp = Math.min(actor.maxHp, actor.hp + healAmount);
-        const healed = actor.hp - before;
-        if(healed > 0){
-          updateHpBar(actor);
-          logLine(`${actor.name} は${healed}HP吸収した！`, 'heal');
+        showDamagePopup(target, 'MISS', 'miss');
+      } else {
+        const ignoreGuard = kind === 'physical' && actor.skill && actor.skill.ignoreGuard;
+        const dmg = applyDamageTo(target, result.damage, ignoreGuard);
+        totalDamage += dmg;
+        hitCount++;
+        if(result.critical) anyCritical = true;
+        showDamagePopup(target, String(dmg), result.critical ? 'critical' : undefined);
+        // 「吸収」属性の妖術は、与えたダメージの半分だけ自分のHPを回復する
+        if(kind === 'magic' && element === '吸収' && dmg > 0){
+          const healAmount = Math.max(1, Math.round(dmg / 2));
+          const before = actor.hp;
+          actor.hp = Math.min(actor.maxHp, actor.hp + healAmount);
+          const healed = actor.hp - before;
+          if(healed > 0){
+            updateHpBar(actor);
+            logLine(`${actor.name} は${healed}HP吸収した！`, 'heal');
+          }
         }
+        const critTag = result.critical ? `【クリティカル！×${result.critMultiplier}】` : '';
+        const attrTag = result.attrKind === 'weak' ? '【弱点！】' : (result.attrKind === 'resist' ? '【耐性】' : '');
+        if(result.critical) showActionBubble(actor, `クリティカル！`);
+        const hitTag = hits > 1 ? `(${i+1}/${hits}発目) ` : '';
+        const guardTag = target.guarding ? (ignoreGuard ? '（ガード貫通！）' : '（ガード中）') : '';
+        logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${guardTag}`, result.critical ? 'critical' : undefined);
       }
-      const critTag = result.critical ? `【クリティカル！×${result.critMultiplier}】` : '';
-      const attrTag = result.attrKind === 'weak' ? '【弱点！】' : (result.attrKind === 'resist' ? '【耐性】' : '');
-      if(result.critical) showActionBubble(actor, `クリティカル！`);
-      const hitTag = hits > 1 ? `(${i+1}/${hits}発目) ` : '';
-      const guardTag = target.guarding ? (ignoreGuard ? '（ガード貫通！）' : '（ガード中）') : '';
-      logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${guardTag}`, result.critical ? 'critical' : undefined);
+      i++;
+      if(i >= hits || !target.alive){
+        finish();
+      } else {
+        setTimeout(nextHit, HIT_INTERVAL_MS);
+      }
     }
-    if(hits > 1 && hitCount > 0){
-      logLine(`${actor.name} の${actionLabel}は合計 ${totalDamage} ダメージ！（${hitCount}/${hits}発命中）`, anyCritical ? 'critical' : undefined);
-    }
+
+    nextHit();
   }
 
   // 「すばやさ」が高いキャラほど先に行動する。同値の場合はランダムで順番を決める。
@@ -1888,6 +2256,7 @@ function startBattleField(){
     if(c.ult >= ULT_MAX) return;
     c.ult = Math.min(ULT_MAX, c.ult + ultGainPerAction(c.rank));
     updateUltGauge(c);
+    if(c.side === 'ally' && typeof refreshUltReadyHighlights === 'function') refreshUltReadyHighlights();
   }
 
   const frontPositions = [
@@ -2284,6 +2653,20 @@ function startBattleField(){
     setTimeout(() => { if(bubble.parentNode) bubble.parentNode.removeChild(bubble); }, 1600);
   }
 
+  // ---- 被ダメージ（または回復・ミス）の数値をキャラの頭上にポップアップ表示する ----
+  function showDamagePopup(target, text, cls){
+    const el = getCharEl(target);
+    if(!el) return;
+    const popup = document.createElement('div');
+    popup.className = 'damage-popup' + (cls ? ' ' + cls : '');
+    popup.textContent = text;
+    // 同時に複数ヒットした時にすべて重ならないよう、横方向に少しランダムなブレを持たせる
+    const jitter = (Math.random() - 0.5) * 26;
+    popup.style.left = `calc(50% + ${jitter}px)`;
+    el.appendChild(popup);
+    setTimeout(() => { if(popup.parentNode) popup.parentNode.removeChild(popup); }, 1000);
+  }
+
   // 「もえるとうし」等、味方が気絶した時にちからがアップするパッシブスキルを持つ
   // 生きている同じ陣営のキャラ全員に、ちからアップの蓄積を1つ加える（永続・重複可）。
   function triggerAllyFaintBonus(fainted){
@@ -2291,6 +2674,15 @@ function startBattleField(){
     arr.forEach(c => {
       if(c === fainted || !c.alive) return;
       if(c.skill && c.skill.chikaraOnAllyFaint){
+        c.moeruStacks = (c.moeruStacks || 0) + 1;
+        logLine(`${c.name} の${c.skill.name}！ → ちからがアップした！`);
+      }
+    });
+    // 「大将」等、敵を倒すたびちからがアップするパッシブスキルの発動（倒れた側の相手陣営が対象）
+    const foeArr = fainted.side === 'enemy' ? party : enemyParty;
+    foeArr.forEach(c => {
+      if(!c.alive) return;
+      if(c.skill && c.skill.chikaraOnEnemyFaint){
         c.moeruStacks = (c.moeruStacks || 0) + 1;
         logLine(`${c.name} の${c.skill.name}！ → ちからがアップした！`);
       }
@@ -2370,13 +2762,16 @@ function startBattleField(){
     return entries[entries.length - 1][0];
   }
 
-  function performAction(actor){
-    if(!actor.alive) return;
+  function performAction(actor, done){
+    done = done || function(){};
+    if(!actor.alive){ done(); return; }
 
     // 自分の番が来た時点でガード状態は解除（「次に番が回ってくるまで」ガードするため）
     actor.guarding = false;
     // 自分にかかっているとりつき効果の残りターンを消化
     tickPossessEffects(actor);
+    // 継続ダメージ（DoT）などでここまでに気絶した場合は、以降の行動を行わずに終える
+    if(!actor.alive){ done(); return; }
     // 「おせわ」等、行動するたびに発動する隣接ケア系パッシブスキル
     healNeighbors(actor);
 
@@ -2385,6 +2780,15 @@ function startBattleField(){
       const stunEffect = actor.possessEffects.find(e => e.stun);
       const stunName = (stunEffect && stunEffect.name) || '行動不能';
       logLine(`${actor.name} は${stunName}で動けない…！`);
+      done();
+      return;
+    }
+
+    // 「混乱」状態なら、一定確率で行動が空振りに終わる
+    if(typeof isConfused === 'function' && isConfused(actor) && Math.random() < 0.5){
+      logLine(`${actor.name} は混乱していて行動できなかった…`);
+      gainUltOnAction(actor);
+      done();
       return;
     }
 
@@ -2396,7 +2800,14 @@ function startBattleField(){
     if((action === 'physical' || (action === 'magic' && !isHealMagic)) && opponents.length === 0){
       // 攻撃対象がいなければサボりに切り替え
       logLine(`${actor.name} は行動できず立ち尽くした…`);
+      done();
       return;
+    }
+
+    // 攻撃・ガード・取り憑き・サボりを問わず、行動したことに変わりはないので必殺技ゲージを溜めて終了する
+    function finishAction(){
+      gainUltOnAction(actor);
+      done();
     }
 
     switch(action){
@@ -2405,8 +2816,8 @@ function startBattleField(){
         showTargetArrow(target);
         const physicalElement = actor.physicalSkill && actor.physicalSkill.element;
         const hits = (actor.physicalSkill && actor.physicalSkill.hits) || 1;
-        performMultiHitAttack(actor, target, 'physical', BASIC_ATTACK_POWER, physicalElement, hits, '物理攻撃');
-        break;
+        performMultiHitAttack(actor, target, 'physical', BASIC_ATTACK_POWER, physicalElement, hits, '物理攻撃', finishAction);
+        return;
       }
       case 'magic': {
         const magicName = (actor.magicSkill && actor.magicSkill.name) || ACTION_LABELS.magic;
@@ -2426,19 +2837,21 @@ function startBattleField(){
           updateHpBar(healTarget);
           const skillName = actor.magicSkill && actor.magicSkill.name || '回復の術';
           logLine(`${actor.name} の${skillName}！ → ${healTarget.name} が${healed}HP回復した！`, 'heal');
-          break;
+          finishAction();
+          return;
         }
         const target = pickAttackTarget(opponents);
         showTargetArrow(target);
         const hits = (actor.magicSkill && actor.magicSkill.hits) || 1;
-        performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃');
-        break;
+        performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃', finishAction);
+        return;
       }
       case 'guard': {
         actor.guarding = true;
         showActionBubble(actor, ACTION_LABELS.guard);
         logLine(`${actor.name} はガードの構えを取った。`);
-        break;
+        finishAction();
+        return;
       }
       case 'possess': {
         showActionBubble(actor, ACTION_LABELS.possess);
@@ -2453,6 +2866,13 @@ function startBattleField(){
         if(target){
           showTargetArrow(target);
           const kind = doBuff ? 'buff' : 'debuff';
+          // とりつきの成功判定（デバフ＝敵への取り憑きのみ失敗しうる。味方へのバフは常に成功）。
+          // 「きゅうきょくのヤミ」等のスキルを持つ場合は必ず成功する。
+          const alwaysSucceeds = actor.skill && actor.skill.possessAlwaysSucceeds;
+          if(kind === 'debuff' && !alwaysSucceeds && Math.random() >= calcPossessSuccessChance(actor, target)){
+            logLine(`${actor.name} の取り憑きは${target.name}に効かなかった…`);
+            break;
+          }
           // キャラ固有のとりつき技があればそれを使い、無ければ標準的な効果からランダムに選ぶ。
           const preset = actor.possessSkill;
           if(preset && preset.kind === kind && preset.taunt){
@@ -2471,6 +2891,12 @@ function startBattleField(){
             // 「継続回復」系のとりつき：対象は自分の行動のたびにHPが少しずつ回復するようになる
             const effect = applyHotEffect(target, { duration: 5, name: preset.name, rate: preset.hotRate });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが回復するようになった！`);
+            break;
+          }
+          if(preset && preset.kind === kind && preset.dot){
+            // 「継続ダメージ」系のとりつき：対象は自分の行動のたびにHPが少しずつ減っていくようになる
+            const effect = applyDotEffect(target, { name: preset.name, rate: preset.dotRate });
+            logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが減っていくようになった！`);
             break;
           }
           let grade, scope, stat, name;
@@ -2505,7 +2931,9 @@ function startBattleField(){
     }
 
     // 攻撃・ガード・取り憑き・サボりを問わず、行動したことに変わりはないので必殺技ゲージを溜める
-    gainUltOnAction(actor);
+    // （physical/magic の攻撃系は performMultiHitAttack のコールバックで既に finishAction 済みのため return 済み。
+    //  ここに到達するのは possess / slack など同期的に完結する行動のみ）
+    finishAction();
   }
 
   // ============================================================
@@ -2556,8 +2984,170 @@ function startBattleField(){
 
   let turnQueue = [];
 
+  // ============================================================
+  // 必殺技（わざ）まわり
+  //   ・現在行動中のキャラを追跡し、その行動が終わってから必殺技を発動する
+  //   ・チャージが完了したキャラは pendingUltimates に積まれ、順番に処理される
+  // ============================================================
+  let actingCharacter = null;      // 現在 performAction 実行中のキャラ
+  let pendingUltimates = [];       // チャージ完了済み・発動待ちのキャラ一覧
+  let ultBusy = false;             // 必殺技演出の再生中かどうか
+
+  // 必殺技チャージが完了した時に呼ばれる。行動中のキャラでなければ即座に発動を試みる。
+  function onUltChargeComplete(actor){
+    if(!actor.alive){ return; }
+    pendingUltimates.push(actor);
+    logLine(`${actor.name} の必殺技チャージが完了した！`);
+    tryFirePendingUltimates();
+  }
+
+  // 行動中のキャラがいなければ、待機中の必殺技を順に発動する。
+  function tryFirePendingUltimates(){
+    if(battleOver || ultBusy) return;
+    if(actingCharacter) return; // 誰かが行動の最中は、その行動が終わるまで待つ
+    if(pendingUltimates.length === 0) return;
+
+    const actor = pendingUltimates.shift();
+    if(!actor.alive){
+      tryFirePendingUltimates();
+      return;
+    }
+    ultBusy = true;
+    if(battleLoopTimerId){ clearTimeout(battleLoopTimerId); battleLoopTimerId = null; }
+    playUltimateCastBanner(actor, () => {
+      performUltimate(actor, () => {
+        ultBusy = false;
+        if(checkBattleEnd()) return;
+        tryFirePendingUltimates();
+        if(pendingUltimates.length === 0){
+          battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+        }
+      });
+    });
+  }
+
+  function playUltimateCastBanner(actor, done){
+    const banner = document.getElementById('ultCastBanner');
+    const who = document.getElementById('ultCastWho');
+    const nameEl = document.getElementById('ultCastName');
+    const ultName = (actor.ultSkill && actor.ultSkill.name) || '必殺技';
+    who.textContent = `${actor.name} の必殺技！`;
+    nameEl.textContent = ultName;
+    banner.classList.remove('show');
+    // 強制リフローしてアニメーションを再スタートさせる
+    void banner.offsetWidth;
+    banner.classList.add('show');
+    showActionBubble(actor, ultName);
+    setTimeout(() => { banner.classList.remove('show'); done(); }, 1300);
+  }
+
+  // 必殺技本体の効果処理。ult データ（power / hits / target / heal / revive / buffAll / debuff）を見て分岐する。
+  function performUltimate(actor, done){
+    done = done || function(){};
+    if(!actor.alive){ done(); return; }
+    const ult = actor.ultSkill;
+    if(!ult){ logLine(`${actor.name} は必殺技を発動した！`); done(); return; }
+
+    const isAlly = actor.side === 'ally';
+    const ownFront = (isAlly ? party : enemyParty).slice(0, 3).filter(c => c.alive);
+    const foeFront = (isAlly ? enemyParty : party).slice(0, 3).filter(c => c.alive);
+
+    // ---- 自分（またはHP0の前衛を含む味方全体）を対象にする系 ----
+    if(ult.target === 'self'){
+      if(ult.heal === 'full'){
+        actor.hp = actor.maxHp;
+        updateHpBar(actor);
+      }
+      if(ult.buffAll){
+        applyPossessEffect(actor, { kind:'buff', grade:'large', scope:'all', duration: 5, name: ult.name });
+      }
+      logLine(`${actor.name} の${ult.name}！ → 自身が復活の力に満ちた！`, 'heal');
+      done();
+      return;
+    }
+
+    if(ult.target === 'ally-front'){
+      const arr = isAlly ? party : enemyParty;
+      const frontSlots = arr.slice(0, 3);
+      if(ult.revive){
+        frontSlots.forEach(c => {
+          if(!c.alive){
+            c.alive = true;
+            c.hp = Math.max(1, Math.round(c.maxHp * 0.3));
+            updateHpBar(c);
+            logLine(`${c.name} は${ult.name}の力で復活した！`, 'heal');
+          }
+        });
+      }
+      const healAmount = ult.healAll ? Math.round((getEffectiveStats(actor).youjutsu / 2 + 125) * (0.9 + Math.random()*0.2)) : 0;
+      frontSlots.forEach(c => {
+        if(!c.alive) return;
+        const before = c.hp;
+        c.hp = ult.heal === 'full' || !ult.healAll ? c.maxHp : Math.min(c.maxHp, c.hp + healAmount);
+        if(ult.heal === 'full') c.hp = c.maxHp;
+        updateHpBar(c);
+        const healed = c.hp - before;
+        if(healed > 0) logLine(`${actor.name} の${ult.name}！ → ${c.name} が${healed}HP回復した！`, 'heal');
+      });
+      done();
+      return;
+    }
+
+    // ---- 敵を対象にする攻撃系（単体 or 全体、複数ヒット対応） ----
+    const targets = ult.target === 'all' ? foeFront : [pickAttackTarget(foeFront)].filter(Boolean);
+    if(targets.length === 0){
+      logLine(`${actor.name} の${ult.name}！ → しかし相手がいなかった…`);
+      done();
+      return;
+    }
+    const hits = ult.hits || 1;
+
+    function applyDebuffsAndFinish(){
+      // ---- 追加デバフ ----
+      if(ult.debuff === 'stun'){
+        targets.forEach(t => { if(t.alive) applyStunEffect(t, { name: `${ult.name}の衝撃` }); });
+        logLine(`${ult.name}の余波で敵は行動不能になった！`);
+      } else if(ult.debuff === 'confuse'){
+        targets.forEach(t => { if(t.alive) applyConfuseEffect(t, { name: `${ult.name}の混乱`, duration: 3 }); });
+        logLine(`${ult.name}の余波で敵は混乱した！`);
+      } else if(ult.debuff === 'all-stats-down'){
+        targets.forEach(t => { if(t.alive) applyPossessEffect(t, { kind:'debuff', grade:'large', scope:'all', duration: 3, name: `${ult.name}の呪縛` }); });
+        logLine(`${ult.name}の余波で敵の全ステータスがダウンした！`);
+      }
+      done();
+    }
+
+    // 複数対象がいる場合（全体攻撃）は、対象全員に同時にダメージを与える。
+    // （単体対象の場合はそのまま1体だけ処理する。複数回攻撃の発ごとの間隔は維持される）
+    let remaining = targets.filter(t => t.alive).length;
+    if(remaining === 0){
+      applyDebuffsAndFinish();
+      return;
+    }
+    targets.forEach(target => {
+      if(!target.alive) return;
+      performMultiHitAttack(actor, target, 'physical', ult.power || 0, null, hits, ult.name, () => {
+        remaining--;
+        if(remaining <= 0) applyDebuffsAndFinish();
+      });
+    });
+  }
+
+  // 「混乱」デバフ：一定確率で行動が不発になる、簡易な独自効果。既存のとりつき効果配列に相乗りする。
+  function applyConfuseEffect(target, { duration = 3, name }){
+    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind: 'debuff', grade: null, scope: null, stat: null, rate: 0, duration, name, confuse: true, confuseDuration: duration };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+  function isConfused(c){
+    return !!(c.possessEffects && c.possessEffects.some(e => e.confuse));
+  }
+
   function processTurnQueue(){
     if(battleOver) return;
+    if(ultBusy || pendingUltimates.length > 0) return; // 必殺技の処理を優先し、通常ターンは一時停止
     hideTargetArrow();
 
     if(checkBattleEnd()) return;
@@ -2593,10 +3183,431 @@ function startBattleField(){
       return;
     }
 
-    performAction(actor);
+    actingCharacter = actor;
+    performAction(actor, () => {
+      actingCharacter = null;
 
-    if(checkBattleEnd()) return;
-    battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+      if(checkBattleEnd()) return;
+
+      // この行動が終わったタイミングで、発動待ちの必殺技があれば優先して処理する
+      if(pendingUltimates.length > 0){
+        tryFirePendingUltimates();
+        return;
+      }
+
+      battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+    });
+  }
+
+  // ============================================================
+  // 「わざ」ボタン：必殺技ゲージが満タンのキャラをタップで選び、
+  // 4種類のミニゲームのいずれかでチャージを行う。
+  // ============================================================
+  const wazaBtn = document.querySelector('.battle-screen .btn-waza');
+  const ultSelectHint = document.getElementById('ultSelectHint');
+  let ultSelectMode = false;
+
+  function getAllUltReadyAllies(){
+    return party.filter(c => c.alive && c.ult >= ULT_MAX);
+  }
+
+  function refreshUltReadyHighlights(){
+    party.forEach(c => {
+      const el = elements[c.id];
+      if(!el) return;
+      const ready = c.alive && c.ult >= ULT_MAX;
+      el.classList.toggle('ult-ready', ready && !ultSelectMode);
+      el.classList.toggle('ult-selectable', ready && ultSelectMode);
+    });
+  }
+
+  function setUltSelectMode(on){
+    ultSelectMode = on;
+    wazaBtn.classList.toggle('ult-armed', on);
+    ultSelectHint.style.display = on ? 'block' : 'none';
+    refreshUltReadyHighlights();
+  }
+
+  wazaBtn.addEventListener('click', () => {
+    if(battleOver) return;
+    const readyChars = getAllUltReadyAllies();
+    if(!ultSelectMode){
+      if(readyChars.length === 0){
+        logLine('必殺技ゲージが満タンのキャラがいない…');
+        return;
+      }
+      setUltSelectMode(true);
+    } else {
+      setUltSelectMode(false);
+    }
+  });
+
+  party.forEach(c => {
+    const el = elements[c.id];
+    if(!el) return;
+    el.addEventListener('click', () => {
+      if(!ultSelectMode) return;
+      if(!c.alive || c.ult < ULT_MAX) return;
+      setUltSelectMode(false);
+      startUltChargeMinigame(c);
+    });
+  });
+
+  // ------------------------------------------------------------
+  // ミニゲーム共通の土台
+  // ------------------------------------------------------------
+  const ultOverlay = document.getElementById('ultOverlay');
+  const ultFrame = document.getElementById('ultFrame');
+  const ultInstruction = document.getElementById('ultInstruction');
+  const ultCasterName = document.getElementById('ultCasterName');
+  const ultOverlayTitle = document.getElementById('ultOverlayTitle');
+  const ultProgressFg = document.getElementById('ultProgressFg');
+  const ULT_PROGRESS_CIRC = 2 * Math.PI * 150;
+
+  const ULT_MINIGAMES = ['tap', 'trace', 'spin', 'clock'];
+  let currentMinigameCleanup = null;
+
+  function setUltProgress(ratio){
+    const clamped = Math.max(0, Math.min(1, ratio));
+    ultProgressFg.style.strokeDashoffset = String(ULT_PROGRESS_CIRC * (1 - clamped));
+  }
+
+  function startUltChargeMinigame(actor){
+    ultCasterName.textContent = `${actor.name} の必殺技をチャージ！`;
+    ultFrame.innerHTML = '';
+    setUltProgress(0);
+    ultOverlay.classList.add('active');
+
+    const kind = ULT_MINIGAMES[Math.floor(Math.random() * ULT_MINIGAMES.length)];
+
+    function finishCharge(){
+      if(currentMinigameCleanup){ currentMinigameCleanup(); currentMinigameCleanup = null; }
+      ultOverlay.classList.remove('active');
+      ultFrame.innerHTML = '';
+      onUltChargeComplete(actor);
+    }
+
+    if(kind === 'tap') startTapMinigame(finishCharge);
+    else if(kind === 'trace') startTraceMinigame(finishCharge);
+    else if(kind === 'spin') startSpinMinigame(finishCharge);
+    else startClockMinigame(finishCharge);
+  }
+
+  // ---- ①「打て！」：飛び交う黄色円盤をすべてタップ ----
+  function startTapMinigame(onComplete){
+    ultOverlayTitle.textContent = '必殺技チャージ「打て！」';
+    ultInstruction.textContent = '飛び交う円盤をすべてタップ！';
+    const DISC_COUNT = 8;
+    const frameW = 320, frameH = 320;
+    const discs = [];
+    let remaining = DISC_COUNT;
+    let rafId = null;
+    let stopped = false;
+
+    for(let i = 0; i < DISC_COUNT; i++){
+      const disc = document.createElement('div');
+      disc.className = 'ult-disc';
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.4 + Math.random() * 1.6;
+      const state = {
+        el: disc,
+        x: 60 + Math.random() * (frameW - 120),
+        y: 60 + Math.random() * (frameH - 120),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        hit: false
+      };
+      disc.addEventListener('pointerdown', (ev) => {
+        ev.stopPropagation();
+        if(state.hit) return;
+        state.hit = true;
+        disc.classList.add('hit');
+        remaining--;
+        setUltProgress((DISC_COUNT - remaining) / DISC_COUNT);
+        if(remaining <= 0){
+          stopped = true;
+          if(rafId) cancelAnimationFrame(rafId);
+          setTimeout(onComplete, 250);
+        }
+      });
+      ultFrame.appendChild(disc);
+      discs.push(state);
+    }
+
+    function tick(){
+      if(stopped) return;
+      discs.forEach(s => {
+        if(s.hit) return;
+        s.x += s.vx; s.y += s.vy;
+        if(s.x < 24 || s.x > frameW - 24) s.vx *= -1;
+        if(s.y < 24 || s.y > frameH - 24) s.vy *= -1;
+        s.el.style.left = s.x + 'px';
+        s.el.style.top = s.y + 'px';
+      });
+      rafId = requestAnimationFrame(tick);
+    }
+    tick();
+
+    currentMinigameCleanup = () => { stopped = true; if(rafId) cancelAnimationFrame(rafId); };
+  }
+
+  // ---- ②「なぞれ！」：指定図形を一筆でなぞるのを3回 ----
+  function startTraceMinigame(onComplete){
+    ultOverlayTitle.textContent = '必殺技チャージ「なぞれ！」';
+    ultInstruction.textContent = '光る図形を指でなぞろう！（3回）';
+
+    const SHAPES = [
+      // 三角形
+      [[160,60],[250,240],[70,240],[160,60]],
+      // 星型（簡易5角形の星）
+      [[160,50],[190,140],[285,140],[208,195],[238,285],[160,230],[82,285],[112,195],[35,140],[130,140],[160,50]],
+      // 円
+      (() => { const pts = []; for(let i=0;i<=32;i++){ const a = (i/32)*Math.PI*2; pts.push([160+95*Math.cos(a),160+95*Math.sin(a)]); } return pts; })(),
+    ];
+
+    let round = 0;
+    const TOTAL_ROUNDS = 3;
+    const svgNS = 'http://www.w3.org/2000/svg';
+
+    function playRound(){
+      ultFrame.querySelectorAll('svg').forEach(s => s.remove());
+      const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 320 320');
+      svg.classList.add('ult-trace-svg');
+      const targetPath = document.createElementNS(svgNS, 'polyline');
+      targetPath.setAttribute('points', shape.map(p => p.join(',')).join(' '));
+      targetPath.classList.add('ult-trace-target');
+      svg.appendChild(targetPath);
+      const drawnPath = document.createElementNS(svgNS, 'polyline');
+      drawnPath.classList.add('ult-trace-drawn');
+      svg.appendChild(drawnPath);
+      ultFrame.appendChild(svg);
+
+      let drawing = false;
+      let drawnPts = [];
+      let coveredCount = 0;
+      const covered = new Array(shape.length).fill(false);
+
+      function svgPoint(ev){
+        const rect = svg.getBoundingClientRect();
+        const x = ((ev.clientX - rect.left) / rect.width) * 320;
+        const y = ((ev.clientY - rect.top) / rect.height) * 320;
+        return [x, y];
+      }
+      function updateDrawn(){
+        drawnPath.setAttribute('points', drawnPts.map(p => p.join(',')).join(' '));
+      }
+      function checkNear(pt){
+        shape.forEach((sp, i) => {
+          const dx = sp[0]-pt[0], dy = sp[1]-pt[1];
+          if(!covered[i] && Math.sqrt(dx*dx+dy*dy) < 26){
+            covered[i] = true; coveredCount++;
+          }
+        });
+      }
+      function onDown(ev){
+        drawing = true; drawnPts = [svgPoint(ev)];
+        checkNear(drawnPts[0]);
+        updateDrawn();
+      }
+      function onMove(ev){
+        if(!drawing) return;
+        const pt = svgPoint(ev);
+        drawnPts.push(pt);
+        checkNear(pt);
+        updateDrawn();
+      }
+      function onUp(){
+        if(!drawing) return;
+        drawing = false;
+        const ratio = coveredCount / shape.length;
+        if(ratio >= 0.7){
+          round++;
+          setUltProgress(round / TOTAL_ROUNDS);
+          svg.remove();
+          cleanupRound();
+          if(round >= TOTAL_ROUNDS){
+            setTimeout(onComplete, 200);
+          } else {
+            setTimeout(playRound, 200);
+          }
+        } else {
+          drawnPts = [];
+          coveredCount = 0;
+          covered.fill(false);
+          updateDrawn();
+        }
+      }
+      svg.addEventListener('pointerdown', onDown);
+      svg.addEventListener('pointermove', onMove);
+      svg.addEventListener('pointerup', onUp);
+      svg.addEventListener('pointerleave', onUp);
+
+      function cleanupRound(){
+        svg.removeEventListener('pointerdown', onDown);
+        svg.removeEventListener('pointermove', onMove);
+        svg.removeEventListener('pointerup', onUp);
+        svg.removeEventListener('pointerleave', onUp);
+      }
+      currentMinigameCleanup = cleanupRound;
+    }
+    playRound();
+  }
+
+  // ---- ③「回せ！」：枠内をぐるぐる回して一定量ためる ----
+  function startSpinMinigame(onComplete){
+    ultOverlayTitle.textContent = '必殺技チャージ「回せ！」';
+    ultInstruction.textContent = '指でぐるぐる回してチャージ！';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 320 320');
+    svg.classList.add('ult-spin-svg');
+    const track = document.createElementNS(svgNS, 'circle');
+    track.setAttribute('cx','160'); track.setAttribute('cy','160'); track.setAttribute('r','110');
+    track.classList.add('ult-spin-track');
+    svg.appendChild(track);
+    const dot = document.createElementNS(svgNS, 'circle');
+    dot.setAttribute('r','12');
+    dot.classList.add('ult-spin-dot');
+    svg.appendChild(dot);
+    ultFrame.appendChild(svg);
+
+    let dragging = false;
+    let lastAngle = null;
+    let totalRotation = 0;
+    const NEEDED_ROTATION = Math.PI * 2 * 3; // 3周分
+
+    function angleFromEvent(ev){
+      const rect = svg.getBoundingClientRect();
+      const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+      return Math.atan2(ev.clientY - cy, ev.clientX - cx);
+    }
+    function updateDot(angle){
+      dot.setAttribute('cx', 160 + 110*Math.cos(angle));
+      dot.setAttribute('cy', 160 + 110*Math.sin(angle));
+    }
+    updateDot(-Math.PI/2);
+
+    function onDown(ev){ dragging = true; lastAngle = angleFromEvent(ev); }
+    function onMove(ev){
+      if(!dragging) return;
+      const angle = angleFromEvent(ev);
+      let delta = angle - lastAngle;
+      if(delta > Math.PI) delta -= Math.PI*2;
+      if(delta < -Math.PI) delta += Math.PI*2;
+      totalRotation += Math.abs(delta);
+      lastAngle = angle;
+      updateDot(angle);
+      setUltProgress(totalRotation / NEEDED_ROTATION);
+      if(totalRotation >= NEEDED_ROTATION){
+        cleanup();
+        setTimeout(onComplete, 200);
+      }
+    }
+    function onUp(){ dragging = false; lastAngle = null; }
+    svg.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+
+    function cleanup(){
+      svg.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    currentMinigameCleanup = cleanup;
+  }
+
+  // ---- ④「合わせろ！」：光る数字に針を合わせるのを3回 ----
+  function startClockMinigame(onComplete){
+    ultOverlayTitle.textContent = '必殺技チャージ「合わせろ！」';
+    ultInstruction.textContent = '光っている数字に針を合わせよう！（3回）';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    let round = 0;
+    const TOTAL_ROUNDS = 3;
+
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 320 320');
+    svg.classList.add('ult-clock-svg');
+    const face = document.createElementNS(svgNS, 'circle');
+    face.setAttribute('cx','160'); face.setAttribute('cy','160'); face.setAttribute('r','120');
+    face.classList.add('ult-clock-face');
+    svg.appendChild(face);
+
+    const numEls = [];
+    for(let n = 1; n <= 12; n++){
+      const a = (n/12) * Math.PI*2 - Math.PI/2;
+      const x = 160 + 98*Math.cos(a), y = 160 + 98*Math.sin(a);
+      const t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', x); t.setAttribute('y', y);
+      t.classList.add('ult-clock-num');
+      t.textContent = String(n);
+      svg.appendChild(t);
+      numEls.push(t);
+    }
+    const hand = document.createElementNS(svgNS, 'line');
+    hand.setAttribute('x1','160'); hand.setAttribute('y1','160');
+    hand.classList.add('ult-clock-hand');
+    svg.appendChild(hand);
+    ultFrame.appendChild(svg);
+
+    let targetNum = 0;
+    let dragging = false;
+
+    function pickTarget(){
+      numEls.forEach(t => t.classList.remove('glow'));
+      targetNum = 1 + Math.floor(Math.random()*12);
+      numEls[targetNum-1].classList.add('glow');
+    }
+    function setHandAngle(angle){
+      hand.setAttribute('x2', 160 + 95*Math.cos(angle));
+      hand.setAttribute('y2', 160 + 95*Math.sin(angle));
+    }
+    setHandAngle(-Math.PI/2);
+    pickTarget();
+
+    function angleFromEvent(ev){
+      const rect = svg.getBoundingClientRect();
+      const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+      return Math.atan2(ev.clientY - cy, ev.clientX - cx);
+    }
+    function nearestNumberFromAngle(angle){
+      let norm = angle + Math.PI/2;
+      if(norm < 0) norm += Math.PI*2;
+      let n = Math.round(norm / (Math.PI*2/12));
+      if(n === 0) n = 12;
+      if(n > 12) n -= 12;
+      return n;
+    }
+    function onDown(ev){ dragging = true; onMove(ev); }
+    function onMove(ev){
+      if(!dragging) return;
+      const angle = angleFromEvent(ev);
+      setHandAngle(angle);
+      const n = nearestNumberFromAngle(angle);
+      if(n === targetNum){
+        round++;
+        setUltProgress(round / TOTAL_ROUNDS);
+        dragging = false;
+        if(round >= TOTAL_ROUNDS){
+          cleanup();
+          setTimeout(onComplete, 200);
+        } else {
+          setTimeout(pickTarget, 150);
+        }
+      }
+    }
+    function onUp(){ dragging = false; }
+    svg.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+
+    function cleanup(){
+      svg.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    currentMinigameCleanup = cleanup;
   }
 
   logLine('自動戦闘を開始します。前衛キャラがすばやさ順に行動します。');
