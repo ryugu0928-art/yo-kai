@@ -655,6 +655,8 @@
   .c-orange{ background:radial-gradient(circle at 35% 30%, #f0b878, #c47a2f); }
   .c-teal  { background:radial-gradient(circle at 35% 30%, #8fe0d0, #2f9c86); }
   .c-pink  { background:radial-gradient(circle at 35% 30%, #f0a8c8, #c4477f); }
+  .c-yellow{ background:radial-gradient(circle at 35% 30%, #fff0a0, #d4b32c); }
+  .c-navy  { background:radial-gradient(circle at 35% 30%, #7fa8e0, #23407a); }
 
   .battle-screen .command-bar{
     position:absolute;
@@ -1207,9 +1209,123 @@ const characterPool = [
     possess:{ name:'奇跡の桜', desc:'すばやさ大アップ', kind:'buff', grade:'large', scope:'single', stat:'subayasa' },
     ult:{ name:'満開サクラサク', power:0, target:'ally-front', revive:true, healAll:true, desc:'気絶している前衛を復活させて前衛全体のHPを回復させる(回復量=ようじゅつ/2+125±10%)' }
   },
-  { id:'p6', cls:'c-green',  label:'F', name:'じぶんキャラ6', rank:'S', slackSeikaku:'sunao', stats:{ chikara:72, mamori:75, youjutsu:85, subayasa:66 } },
-  { id:'p7', cls:'c-teal',   label:'G', name:'じぶんキャラ7', rank:'B', slackSeikaku:'sunao', stats:{ chikara:55, mamori:50, youjutsu:80, subayasa:95 } },
-  { id:'p8', cls:'c-pink',   label:'H', name:'じぶんキャラ8', rank:'C', slackSeikaku:'sunao', stats:{ chikara:68, mamori:60, youjutsu:74, subayasa:74 } },
+  { id:'p6', cls:'c-green', label:'F', name:'うんちく魔', rank:'S', no:327, zoku:'ウスラカゲ族', maxHp:285, slackSeikaku:'sunao',
+    stats:{ chikara:146, mamori:71, youjutsu:131, subayasa:133 },
+    skill:{ name:'うんちく', desc:'敵味方全員の妖術の属性が無くなる', nullifyMagicElement:true },
+    tokui:'火', jaku:'水',
+    physical:{ name:'みだれづき', power:12, hits:3 },
+    magic:{ name:'死神の術', power:80, element:'吸収' },
+    possess:{ name:'うんちくを言わせる', desc:'行動不能', kind:'debuff', stun:true },
+    ult:{ name:'うんざりうんちく地獄', power:150, target:'all', debuff:'confuse', desc:'全体攻撃＋混乱デバフ' }
+  },
+  { id:'p7', cls:'c-teal', label:'G', name:'イケメン犬', rank:'S', no:328, zoku:'ブキミー族', maxHp:302, slackSeikaku:'sunao',
+    stats:{ chikara:101, mamori:86, youjutsu:138, subayasa:169 },
+    skill:{ name:'モテモテ', desc:'敵が仲間になりやすくなる(今回のバトルのみのゲームでは効果なし)' },
+    tokui:'水', jaku:'雷',
+    physical:{ name:'タックル', power:60 },
+    magic:{ name:'極楽の術', power:80, element:'回復' },
+    possess:{ name:'いやしのふんいき', desc:'HPがだんだん回復する', kind:'buff', hot:true, hotRate:0.05 },
+    ult:{ name:'イケメン様のほほえみ', power:0, target:'ally-front', healAll:true, desc:'前衛全体のHPを全回復する' }
+  },
+  { id:'p8', cls:'c-pink', label:'H', name:'やまタン', rank:'S', no:329, zoku:'ニョロロン族', maxHp:338, slackSeikaku:'sunao',
+    stats:{ chikara:148, mamori:89, youjutsu:148, subayasa:127 },
+    skill:{ name:'8枚舌', desc:'攻撃したとき敵のガードの効果を無視する(物理攻撃のみ・威力は本来の93%)', ignoreGuard:true },
+    tokui:'火', jaku:'水',
+    physical:{ name:'かみちぎる', power:80 },
+    magic:{ name:'死神の術', power:80, element:'吸収' },
+    possess:{ name:'8倍の力', desc:'全ステータスがアップ', kind:'buff', grade:'normal', scope:'all' },
+    ult:{ name:'やまタン8枚タン！', power:32, hits:8, target:'all' }
+  },
+  { id:'p9', cls:'c-yellow', label:'I', name:'ヒカリオロチ', rank:'S', no:437, zoku:'イサマシ族', maxHp:278, slackSeikaku:'sunao',
+    stats:{ chikara:149, mamori:121, youjutsu:70, subayasa:138 },
+    skill:{ name:'光オーラ', desc:'となりにいるキャラのHPをだんだん回復する', neighborHeal:true, neighborHealRate:0.02 },
+    tokui:'雷', jaku:'土',
+    physical:{ name:'かみちぎる', power:80 },
+    magic:{ name:'雷神の術', power:80, element:'雷' },
+    possess:{ name:'聖なる光', desc:'HPがどんどん回復する', kind:'buff', hot:true, hotRate:0.05 },
+    ult:{ name:'閃光ドラゴンラッシュ', power:24, hits:10, target:'all' }
+  },
+  { id:'p10', cls:'c-cream', label:'J', name:'クワガ大将', rank:'S', no:36, zoku:'イサマシ族', maxHp:281, slackSeikaku:'sunao',
+    stats:{ chikara:144, mamori:146, youjutsu:87, subayasa:99 },
+    skill:{ name:'いあつかん', desc:'敵味方全員がさぼらなくなる', noSlackAura:true },
+    tokui:'風', jaku:'火',
+    physical:{ name:'流星パンチ', power:20, hits:3 },
+    magic:{ name:'氷結の術', power:50, element:'氷' },
+    possess:{ name:'大将パワー', desc:'ちからアップ', kind:'buff', grade:'normal', scope:'single', stat:'chikara' },
+    ult:{ name:'閃光地獄バサミ', power:195, target:'single' }
+  },
+  { id:'p11', cls:'c-orange', label:'K', name:'しゅらコマ', rank:'S', no:323, zoku:'フシギ族', maxHp:276, slackSeikaku:'sunao',
+    stats:{ chikara:91, mamori:98, youjutsu:176, subayasa:128 },
+    skill:{ name:'もえるとうし', desc:'味方が気絶するとちからがアップ', chikaraOnAllyFaint:true },
+    tokui:'火', jaku:'水',
+    physical:{ name:'正拳突き', power:90 },
+    magic:{ name:'れんごくの術', power:80, element:'火' },
+    possess:{ name:'しゅらの力', desc:'ようじゅつ大アップ', kind:'buff', grade:'large', scope:'single', stat:'youjutsu' },
+    ult:{ name:'しゅらシュシュシュ', power:170, target:'all' }
+  },
+  { id:'p12', cls:'c-blue', label:'L', name:'風魔猿', rank:'S', no:83, zoku:'フシギ族', maxHp:253, slackSeikaku:'sunao',
+    stats:{ chikara:110, mamori:89, youjutsu:181, subayasa:123 },
+    skill:{ name:'閃光', desc:'一度だけ先制攻撃できる', preemptiveStrike:true },
+    tokui:'雷', jaku:'土',
+    physical:{ name:'くらいつく', power:45 },
+    magic:{ name:'雷神の術', power:80, element:'雷' },
+    possess:{ name:'風魔の力', desc:'すばやさ大アップ', kind:'buff', grade:'large', scope:'single', stat:'subayasa' },
+    ult:{ name:'風魔ライデン', power:190, target:'single' }
+  },
+  { id:'p13', cls:'c-navy', label:'M', name:'青鬼', rank:'S', no:439, zoku:'ゴーケツ族', maxHp:436, slackSeikaku:'sunao',
+    stats:{ chikara:115, mamori:121, youjutsu:183, subayasa:142 },
+    skill:{ name:'水あそび', desc:'自分が使う水属性のダメージがアップ(青鬼自身)', elementDamageBoost:{ element:'水', rate:0.2 } },
+    tokui:'水', jaku:'雷',
+    physical:{ name:'ドクロ割り', power:75 },
+    magic:{ name:'大滝の術', power:80, element:'水' },
+    possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
+    ult:{ name:'冷徹の金棒', power:350, target:'single' }
+  },
+  { id:'p14', cls:'c-red', label:'N', name:'赤鬼', rank:'S', no:438, zoku:'ゴーケツ族', maxHp:438, slackSeikaku:'sunao',
+    stats:{ chikara:200, mamori:114, youjutsu:90, subayasa:145 },
+    skill:{ name:'ガードくずし', desc:'攻撃したとき敵のガードの効果を無視する(物理攻撃のみ・威力は本来の93%)', ignoreGuard:true },
+    tokui:'火', jaku:'水',
+    physical:{ name:'ドクロ割り', power:75 },
+    magic:{ name:'れんごくの術', power:80, element:'火' },
+    possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
+    ult:{ name:'怒りの金棒', power:350, target:'single' }
+  },
+  { id:'p15', cls:'c-purple', label:'O', name:'マスターニャーダ', rank:'S', no:160, zoku:'プリチー族', maxHp:259, slackSeikaku:'sunao',
+    stats:{ chikara:94, mamori:116, youjutsu:159, subayasa:135 },
+    skill:{ name:'ホース', desc:'敵の妖術をよけまくる', magicEvasionBonus:0.4 },
+    tokui:'風', jaku:'氷',
+    physical:{ name:'ぶったたく', power:40 },
+    magic:{ name:'嵐の術', power:80, element:'風' },
+    possess:{ name:'ホースの力', desc:'全ステータスアップ', kind:'buff', grade:'normal', scope:'all' },
+    ult:{ name:'無限のホースパワー', power:210, target:'all' }
+  },
+  { id:'p16', cls:'c-blue', label:'P', name:'百鬼姫', rank:'S', no:157, zoku:'プリチー族', maxHp:262, slackSeikaku:'sunao',
+    stats:{ chikara:136, mamori:105, youjutsu:135, subayasa:123 },
+    skill:{ name:'のろいのおはだ', desc:'敵にとりつかれていると全ステータスアップ', allStatsUpWhileDebuffed:true },
+    tokui:'氷', jaku:'火',
+    physical:{ name:'はりたおす', power:20, hits:2 },
+    magic:{ name:'吹雪の術', power:80, element:'氷' },
+    possess:{ name:'闇の呪い', desc:'全ステータス大ダウン', kind:'debuff', grade:'large', scope:'all' },
+    ult:{ name:'ときめき☆百鬼夜行', power:140, target:'all', debuff:'all-stats-down', desc:'全体攻撃＋全ステータスダウン' }
+  },
+  { id:'p17', cls:'c-teal', label:'Q', name:'絶オジイ', rank:'S', no:197, zoku:'ポカポカ族', maxHp:281, slackSeikaku:'sunao',
+    stats:{ chikara:128, mamori:106, youjutsu:106, subayasa:124 },
+    skill:{ name:'いあつかん', desc:'敵味方全員がさぼらなくなる', noSlackAura:true },
+    tokui:'雷', jaku:'土',
+    physical:{ name:'正拳突き', power:90 },
+    magic:{ name:'雷神の術', power:80, element:'雷' },
+    possess:{ name:'オジイの喝', desc:'ちから大アップ', kind:'buff', grade:'large', scope:'single', stat:'chikara' },
+    ult:{ name:'超絶ちゃぶ台返し', power:250, target:'all', desc:'全体攻撃＋敵の必殺技をかなりキャンセルしやすい' }
+  },
+  { id:'p18', cls:'c-navy', label:'R', name:'ゾロ目大明神', rank:'A', no:195, zoku:'ポカポカ族', maxHp:227, slackSeikaku:'sunao',
+    stats:{ chikara:141, mamori:135, youjutsu:113, subayasa:101 },
+    skill:{ name:'ギャンブラー', desc:'クリティカルがでやすいがクリティカルされやすい(30％ほど)', gambler:true },
+    tokui:'水', jaku:'雷',
+    physical:{ name:'地球わり', power:95 },
+    magic:{ name:'大滝の術', power:80, element:'水' },
+    possess:{ name:'大明神の加護', desc:'HPがだんだん回復する', kind:'buff', hot:true, hotRate:0.05 },
+    ult:{ name:'必中大当たり！', power:140, target:'all' }
+  },
 ];
 const MAX_ROSTER = 6;
 let selectedIds = []; // 選ばれた順が、そのまま「前衛→後衛」の並びになる
@@ -1457,6 +1573,28 @@ function startBattleField(){
     return !!(c.possessEffects && c.possessEffects.some(e => e.taunt));
   }
 
+  // 「いやしのふんいき」等、時間経過でじわじわHPが回復するバフ効果を付与する。
+  function applyHotEffect(target, { duration = 5, name, rate = 0.05 }){
+    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind: 'buff', grade: null, scope: null, stat: null, rate: 0, duration, name, hot: true, hotRate: rate };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+
+  // 「行動不能」系のとりつき効果を付与する（デバフなので、いったんかかるとずっと解けない）。
+  function applyStunEffect(target, { name }){    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind: 'debuff', grade: null, scope: null, stat: null, rate: 0, duration: null, name, stun: true };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+
+  // 対象が「行動不能」状態かどうか
+  function isStunned(c){
+    return !!(c.possessEffects && c.possessEffects.some(e => e.stun));
+  }
+
   // 通常攻撃・妖術攻撃の対象を選ぶ。挑発中のキャラがいれば必ずそちらが狙われる。
   function pickAttackTarget(candidates){
     const alive = candidates.filter(c => c.alive);
@@ -1470,6 +1608,19 @@ function startBattleField(){
   // とりつき効果の残りターンを1減らし、0になったものを取り除く。
   function tickPossessEffects(c){
     if(!c.possessEffects || c.possessEffects.length === 0) return;
+    // 「いやしのふんいき」等、時間経過で回復する系のバフは、行動のたびにHPを回復させる
+    c.possessEffects.forEach(e => {
+      if(e.hot && e.kind === 'buff' && c.hp < c.maxHp){
+        const healAmount = Math.max(1, Math.round(c.maxHp * e.hotRate));
+        const before = c.hp;
+        c.hp = Math.min(c.maxHp, c.hp + healAmount);
+        const healed = c.hp - before;
+        if(healed > 0){
+          updateHpBar(c);
+          logLine(`${c.name} は${e.name}の効果でHPが${healed}回復した！`, 'heal');
+        }
+      }
+    });
     // デバフは行動回数で切れず、ずっと持続する。バフのみ残り行動回数を減らして消滅させる。
     c.possessEffects.forEach(e => { if(e.kind === 'buff') e.duration -= 1; });
     c.possessEffects = c.possessEffects.filter(e => e.kind !== 'buff' || e.duration > 0);
@@ -1503,6 +1654,18 @@ function startBattleField(){
     // 「におうだち」：前衛の真ん中にいる時だけまもりアップ（通常アップと同じ上げ幅：+10%）
     if(c.skill && c.skill.middleMamoriBoost && isInMiddleFrontPosition(c)){
       result.mamori *= 1.10;
+    }
+    // 「もえるとうし」：味方が気絶するたびにちからアップ（永続・重複、1回につき+10%）
+    if(c.moeruStacks){
+      result.chikara *= 1 + 0.10 * c.moeruStacks;
+    }
+    // 「のろいのおはだ」：自分にデバフ（敵からのとりつき）がかかっている間、全ステータスアップ
+    if(c.skill && c.skill.allStatsUpWhileDebuffed && c.possessEffects && c.possessEffects.some(e => e.kind === 'debuff')){
+      const mult = 1 + BUFF_RATES.normal.all;
+      result.chikara *= mult;
+      result.mamori *= mult;
+      result.youjutsu *= mult;
+      result.subayasa *= mult;
     }
     if(!c.possessEffects) return result;
     c.possessEffects.forEach(e => {
@@ -1574,6 +1737,14 @@ function startBattleField(){
   // 属性の一覧（このゲームでは以下の7属性を扱う）
   const ELEMENTS = ['火', '水', '雷', '土', '氷', '風', '吸収'];
 
+  // 「うんちく」等、妖術の属性をすべて無くすパッシブスキルが場（自分・敵どちらでも）に
+  // 生きている限り発動しているかどうか。「吸収」「回復」は属性ではなく技の特殊効果なので対象外。
+  const NON_ELEMENTAL_MAGIC_TAGS = ['吸収', '回復'];
+  function isMagicElementNullified(){
+    const all = [...party, ...enemyParty];
+    return all.some(c => c.alive && c.skill && c.skill.nullifyMagicElement);
+  }
+
   // 属性相性：攻撃属性が対象の「得意」属性と一致するとダメージ0.5倍、
   // 「弱点」属性と一致すると1.8倍になる。属性が無い攻撃や、
   // どちらにも該当しない場合は等倍（1.0倍）のまま。
@@ -1590,8 +1761,11 @@ function startBattleField(){
   // 「超クリティカル」スキルを持つキャラは、いりょく（倍率）がそのスキルの値に置き換わる。
   const CRIT_CHANCE = 0.05;
   const CRIT_MULTIPLIER_DEFAULT = 1.5;
-  function rollCritical(attacker){
-    if(Math.random() >= CRIT_CHANCE) return { critical:false, multiplier:1 };
+  function rollCritical(attacker, defender){
+    let chance = CRIT_CHANCE;
+    if(attacker.skill && attacker.skill.gambler) chance += 0.30; // 自分の攻撃がクリティカルになりやすい
+    if(defender && defender.skill && defender.skill.gambler) chance += 0.30; // 相手にクリティカルされやすい
+    if(Math.random() >= chance) return { critical:false, multiplier:1 };
     const multiplier = (attacker.skill && attacker.skill.critMultiplier) || CRIT_MULTIPLIER_DEFAULT;
     return { critical:true, multiplier };
   }
@@ -1603,14 +1777,28 @@ function startBattleField(){
     if(!alwaysHit && Math.random() < calcEvasionChance(attacker, defender, kind)){
       return { hit:false, damage:0, critical:false };
     }
+    let effectiveElement = element;
+    if(kind === 'magic' && effectiveElement && !NON_ELEMENTAL_MAGIC_TAGS.includes(effectiveElement) && isMagicElementNullified()){
+      effectiveElement = null;
+    }
     let damage = kind === 'magic'
       ? calcMagicDamage(attacker, defender, power)
       : calcPhysicalDamage(attacker, defender, power);
-    const attr = calcAttributeMultiplier(defender, element);
+    // ガード無視系のスキル／効果は、物理攻撃にのみ働く。その代わり物理攻撃の威力が本来の93%にダウンする。
+    const hasIgnoreGuard = attacker.skill && attacker.skill.ignoreGuard;
+    if(kind === 'physical' && hasIgnoreGuard){
+      damage = Math.round(damage * 0.93);
+    }
+    // 「水あそび」等、自分が使う特定属性の妖術ダメージがアップするパッシブスキル（本人にのみ効果）
+    if(kind === 'magic' && attacker.skill && attacker.skill.elementDamageBoost
+       && effectiveElement === attacker.skill.elementDamageBoost.element){
+      damage = Math.round(damage * (1 + attacker.skill.elementDamageBoost.rate));
+    }
+    const attr = calcAttributeMultiplier(defender, effectiveElement);
     if(attr.multiplier !== 1){
       damage = Math.max(1, Math.round(damage * attr.multiplier));
     }
-    const crit = rollCritical(attacker);
+    const crit = rollCritical(attacker, defender);
     if(crit.critical){
       damage = Math.round(damage * crit.multiplier);
     }
@@ -1633,7 +1821,8 @@ function startBattleField(){
         logLine(`${actor.name} の${actionLabel}！(${i+1}/${hits}発目) → ${target.name} はかわした！`, 'miss');
         continue;
       }
-      const dmg = applyDamageTo(target, result.damage);
+      const ignoreGuard = kind === 'physical' && actor.skill && actor.skill.ignoreGuard;
+      const dmg = applyDamageTo(target, result.damage, ignoreGuard);
       totalDamage += dmg;
       hitCount++;
       if(result.critical) anyCritical = true;
@@ -1652,7 +1841,8 @@ function startBattleField(){
       const attrTag = result.attrKind === 'weak' ? '【弱点！】' : (result.attrKind === 'resist' ? '【耐性】' : '');
       if(result.critical) showActionBubble(actor, `クリティカル！`);
       const hitTag = hits > 1 ? `(${i+1}/${hits}発目) ` : '';
-      logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${target.guarding ? '（ガード中）' : ''}`, result.critical ? 'critical' : undefined);
+      const guardTag = target.guarding ? (ignoreGuard ? '（ガード貫通！）' : '（ガード中）') : '';
+      logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${guardTag}`, result.critical ? 'critical' : undefined);
     }
     if(hits > 1 && hitCount > 0){
       logLine(`${actor.name} の${actionLabel}は合計 ${totalDamage} ダメージ！（${hitCount}/${hits}発命中）`, anyCritical ? 'critical' : undefined);
@@ -2094,15 +2284,30 @@ function startBattleField(){
     setTimeout(() => { if(bubble.parentNode) bubble.parentNode.removeChild(bubble); }, 1600);
   }
 
-  // ---- ダメージ適用（ガード中は約50%カット） ----
-  function applyDamageTo(defender, rawDamage){
-    const finalDamage = defender.guarding ? Math.round(rawDamage * 0.5) : rawDamage;
+  // 「もえるとうし」等、味方が気絶した時にちからがアップするパッシブスキルを持つ
+  // 生きている同じ陣営のキャラ全員に、ちからアップの蓄積を1つ加える（永続・重複可）。
+  function triggerAllyFaintBonus(fainted){
+    const arr = fainted.side === 'enemy' ? enemyParty : party;
+    arr.forEach(c => {
+      if(c === fainted || !c.alive) return;
+      if(c.skill && c.skill.chikaraOnAllyFaint){
+        c.moeruStacks = (c.moeruStacks || 0) + 1;
+        logLine(`${c.name} の${c.skill.name}！ → ちからがアップした！`);
+      }
+    });
+  }
+
+  // ---- ダメージ適用（ガード中は約50%カット。ただしガード無視スキルを持つ攻撃者には効かない） ----
+  function applyDamageTo(defender, rawDamage, ignoreGuard){
+    const finalDamage = (defender.guarding && !ignoreGuard) ? Math.round(rawDamage * 0.5) : rawDamage;
     defender.hp = Math.max(0, defender.hp - finalDamage);
     updateHpBar(defender);
     if(defender.hp <= 0 && defender.alive){
       defender.alive = false;
       updateHpBar(defender);
       logLine(`${defender.name} を倒した！`, 'dead');
+      // 「もえるとうし」等、味方が気絶した時にちからがアップするパッシブスキルの発動
+      triggerAllyFaintBonus(defender);
     }
     // 前衛が全滅した側があれば、その場で強制的に前衛と後衛を入れ替える
     forceSwapIfFrontWiped();
@@ -2142,9 +2347,16 @@ function startBattleField(){
   // ---- 行動パターン ----
   const ACTIONS = ['physical', 'magic', 'guard', 'possess', 'slack'];
 
+  // 場（自分・敵どちらでも）に「いあつかん」等、誰もサボらなくなるパッシブスキルを持つ
+  // 生きているキャラがいるかどうか。
+  function isNoSlackAuraActive(){
+    const all = [...party, ...enemyParty];
+    return all.some(c => c.alive && c.skill && c.skill.noSlackAura);
+  }
+
   // サボりやすさ性格＋行動性格の重みに基づいて、このターンの行動を1つ選ぶ
   function chooseAction(actor){
-    const slackRate = (actor.slackSeikaku && actor.slackSeikaku.rate) || 0;
+    const slackRate = isNoSlackAuraActive() ? 0 : ((actor.slackSeikaku && actor.slackSeikaku.rate) || 0);
     if(Math.random() < slackRate) return 'slack';
 
     const rateTable = buildActionRateTable(actor);
@@ -2167,6 +2379,14 @@ function startBattleField(){
     tickPossessEffects(actor);
     // 「おせわ」等、行動するたびに発動する隣接ケア系パッシブスキル
     healNeighbors(actor);
+
+    // 「行動不能」状態なら、何もできずにターンを終える
+    if(isStunned(actor)){
+      const stunEffect = actor.possessEffects.find(e => e.stun);
+      const stunName = (stunEffect && stunEffect.name) || '行動不能';
+      logLine(`${actor.name} は${stunName}で動けない…！`);
+      return;
+    }
 
     const opponents = actor.side === 'ally' ? getFrontRowCombatants().filter(c => c.side === 'enemy') : getFrontRowCombatants().filter(c => c.side === 'ally');
     const action = chooseAction(actor);
@@ -2239,6 +2459,18 @@ function startBattleField(){
             // 「挑発」系のとりつき：ステータス変化はなく、対象が常に狙われるようになる
             const effect = applyTauntEffect(target, { duration: 5, name: preset.name });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} は常に敵から狙われるようになった！`);
+            break;
+          }
+          if(preset && preset.kind === kind && preset.stun){
+            // 「行動不能」系のとりつき：対象は次の行動から動けなくなる
+            const effect = applyStunEffect(target, { name: preset.name });
+            logLine(`${actor.name} の${preset.name}！ → ${target.name} は行動不能になった！`);
+            break;
+          }
+          if(preset && preset.kind === kind && preset.hot){
+            // 「継続回復」系のとりつき：対象は自分の行動のたびにHPが少しずつ回復するようになる
+            const effect = applyHotEffect(target, { duration: 5, name: preset.name, rate: preset.hotRate });
+            logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが回復するようになった！`);
             break;
           }
           let grade, scope, stat, name;
@@ -2333,7 +2565,18 @@ function startBattleField(){
     // キューが空になったら、次のラウンドの行動順を新たに作り直す
     if(turnQueue.length === 0){
       cpuMaybeRotate();
-      turnQueue = getTurnOrder(getFrontRowCombatants());
+      const front = getFrontRowCombatants();
+      // 「閃光」等、一度だけ先制攻撃できるスキルを持つキャラがいれば、
+      // まだ使っていない場合に限り、その回だけ行動順の先頭に割り込ませる。
+      const preemptChar = front.find(c => c.alive && c.skill && c.skill.preemptiveStrike && !c.usedPreemptiveStrike);
+      if(preemptChar){
+        preemptChar.usedPreemptiveStrike = true;
+        const rest = getTurnOrder(front.filter(c => c !== preemptChar));
+        turnQueue = [preemptChar, ...rest];
+        logLine(`${preemptChar.name} の${preemptChar.skill.name}！ → 先制攻撃！`);
+      } else {
+        turnQueue = getTurnOrder(front);
+      }
       // 前衛に誰もいない等で組めない場合は、少し待って再チェックする
       if(turnQueue.length === 0){
         battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
