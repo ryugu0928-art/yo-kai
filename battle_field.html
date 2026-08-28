@@ -1184,6 +1184,85 @@
     color:#fff;
     text-shadow:0 0 20px rgba(232,200,116,0.9), 0 4px 6px rgba(0,0,0,0.8);
   }
+
+  /* ============================================================
+     「ねらう」：スコープでターゲットにピンを刺す機能
+  ============================================================ */
+  .battle-screen .action-menu-left .btn-nerau.nerau-armed{
+    animation:pulseGlow 1s ease-in-out infinite;
+  }
+
+  /* ねらうモード中は敵の体力バーを表示する */
+  .battle-screen .stage.nerau-active .enemy-member .hpbar{
+    display:block !important;
+  }
+
+  .battle-screen .nerau-scope{
+    position:absolute;
+    width:120px;
+    height:120px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%);
+    z-index:90;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.2s ease;
+  }
+  .battle-screen .nerau-scope.visible{
+    opacity:1;
+  }
+  .battle-screen .nerau-scope svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .battle-screen .nerau-scope .scope-ring{
+    fill:rgba(80,160,255,0.16);
+    stroke:#4fa3f0;
+    stroke-width:3;
+    transition:fill 0.15s ease, stroke 0.15s ease;
+  }
+  .battle-screen .nerau-scope.locked-on .scope-ring{
+    fill:rgba(255,70,70,0.22);
+    stroke:#ff4646;
+  }
+  .battle-screen .nerau-scope .scope-cross line{
+    stroke:#ff4646;
+    stroke-width:2.4;
+  }
+  .battle-screen .nerau-scope .scope-tick{
+    stroke:#4fa3f0;
+    stroke-width:2;
+    transition:stroke 0.15s ease;
+  }
+  .battle-screen .nerau-scope.locked-on .scope-tick{
+    stroke:#ff4646;
+  }
+
+  /* 敵に刺さる赤いピン */
+  @keyframes pinDropIn{
+    0%{ transform:translate(-50%, -140%) scale(0.6); opacity:0; }
+    60%{ transform:translate(-50%, -100%) scale(1.15); opacity:1; }
+    100%{ transform:translate(-50%, -100%) scale(1); opacity:1; }
+  }
+  .battle-screen .target-pin{
+    position:absolute;
+    left:50%;
+    top:6%;
+    width:20px;
+    height:20px;
+    transform:translate(-50%, -100%);
+    z-index:24;
+    pointer-events:none;
+    animation:pinDropIn 0.35s ease-out;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.5));
+  }
+  .battle-screen .target-pin svg{ width:100%; height:100%; display:block; }
+
+  /* ねらうモード中、敵キャラをホバー/ピン留め対象として少し目立たせる */
+  .battle-screen .stage.nerau-active .enemy-member:not(.dead){
+    filter:drop-shadow(0 0 6px rgba(79,163,240,0.5));
+  }
+  .battle-screen .stage.nerau-active .enemy-member.nerau-hover:not(.dead){
+    filter:drop-shadow(0 0 12px rgba(255,70,70,0.9));
+  }
 </style>
 </head>
 <body>
@@ -1317,6 +1396,23 @@
       <div class="ult-cast-banner" id="ultCastBanner">
         <div class="who" id="ultCastWho"></div>
         <div class="name" id="ultCastName"></div>
+      </div>
+
+      <!-- 「ねらう」：ドラッグ追従するスコープ -->
+      <div class="nerau-scope" id="nerauScope">
+        <svg viewBox="0 0 120 120">
+          <circle class="scope-ring" cx="60" cy="60" r="46"></circle>
+          <g class="scope-tick">
+            <line x1="60" y1="4"  x2="60" y2="18"></line>
+            <line x1="60" y1="102" x2="60" y2="116"></line>
+            <line x1="4"  y1="60" x2="18" y2="60"></line>
+            <line x1="102" y1="60" x2="116" y2="60"></line>
+          </g>
+          <g class="scope-cross">
+            <line x1="60" y1="38" x2="60" y2="82"></line>
+            <line x1="38" y1="60" x2="82" y2="60"></line>
+          </g>
+        </svg>
       </div>
     </div>
   </div>
@@ -1912,12 +2008,18 @@ function startBattleField(){
   }
 
   // 通常攻撃・妖術攻撃の対象を選ぶ。挑発中のキャラがいれば必ずそちらが狙われる。
+  // 挑発がいない場合、「ねらう」でピンが刺さっている敵がいればそれを優先して狙う。
   function pickAttackTarget(candidates){
     const alive = candidates.filter(c => c.alive);
     if(alive.length === 0) return null;
     const taunting = alive.filter(hasTaunt);
-    const pool = taunting.length > 0 ? taunting : alive;
-    return pool[Math.floor(Math.random() * pool.length)];
+    if(taunting.length > 0){
+      return taunting[Math.floor(Math.random() * taunting.length)];
+    }
+    if(typeof pinnedTarget !== 'undefined' && pinnedTarget && pinnedTarget.alive && alive.includes(pinnedTarget)){
+      return pinnedTarget;
+    }
+    return alive[Math.floor(Math.random() * alive.length)];
   }
 
   // 経過処理：キャラが1行動したタイミングで、そのキャラにかかっている
@@ -2700,6 +2802,10 @@ function startBattleField(){
       logLine(`${defender.name} を倒した！`, 'dead');
       // 「もえるとうし」等、味方が気絶した時にちからがアップするパッシブスキルの発動
       triggerAllyFaintBonus(defender);
+      // 倒したキャラにピンが刺さっていた場合は自動的に外す
+      if(typeof pinnedTarget !== 'undefined' && pinnedTarget === defender && typeof clearPin === 'function'){
+        clearPin();
+      }
     }
     // 前衛が全滅した側があれば、その場で強制的に前衛と後衛を入れ替える
     forceSwapIfFrontWiped();
@@ -3252,6 +3358,119 @@ function startBattleField(){
       startUltChargeMinigame(c);
     });
   });
+
+  // ============================================================
+  // 「ねらう」ボタン：スコープを動かして敵にピンを刺し、狙う対象を指定する
+  // ============================================================
+  const nerauBtn = document.querySelector('.battle-screen .btn-nerau');
+  const nerauScope = document.getElementById('nerauScope');
+  let nerauMode = false;
+  let pinnedTarget = null; // ピンが刺さっている敵キャラ（enemyParty の要素）
+  let pinEl = null;        // ピンのDOM要素
+  let hoveredEnemyEl = null;
+
+  function stagePointFromEvent(ev){
+    const rect = stage.getBoundingClientRect();
+    const point = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  }
+
+  function findEnemyElUnderPoint(clientX, clientY){
+    const els = document.elementsFromPoint(clientX, clientY);
+    const hit = els.find(el => el.classList && el.classList.contains('enemy-member') && !el.classList.contains('dead'));
+    return hit || null;
+  }
+
+  function moveScopeTo(x, y){
+    nerauScope.style.left = x + 'px';
+    nerauScope.style.top = y + 'px';
+  }
+
+  function setNerauHover(el){
+    if(hoveredEnemyEl === el) return;
+    if(hoveredEnemyEl) hoveredEnemyEl.classList.remove('nerau-hover');
+    hoveredEnemyEl = el;
+    if(hoveredEnemyEl) hoveredEnemyEl.classList.add('nerau-hover');
+    nerauScope.classList.toggle('locked-on', !!hoveredEnemyEl);
+  }
+
+  function clearPin(){
+    if(pinEl && pinEl.parentNode) pinEl.parentNode.removeChild(pinEl);
+    pinEl = null;
+    pinnedTarget = null;
+  }
+
+  function setPinOn(enemyChar){
+    clearPin();
+    pinnedTarget = enemyChar;
+    const el = enemyElements[enemyChar.id];
+    if(!el) return;
+    const pin = document.createElement('div');
+    pin.className = 'target-pin';
+    pin.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="6" fill="#ff4646" stroke="#7a1010" stroke-width="1.5"></circle>
+        <path d="M12 14 L12 22" stroke="#7a1010" stroke-width="2.5" stroke-linecap="round"></path>
+        <circle cx="10" cy="6" r="1.6" fill="rgba(255,255,255,0.85)"></circle>
+      </svg>
+    `;
+    el.appendChild(pin);
+    pinEl = pin;
+    logLine(`${enemyChar.name} にねらいを定めた！`);
+  }
+
+  function isPinned(c){
+    return pinnedTarget === c && c.alive;
+  }
+
+  function setNerauMode(on){
+    nerauMode = on;
+    nerauBtn.classList.toggle('nerau-armed', on);
+    stage.classList.toggle('nerau-active', on);
+    nerauScope.classList.toggle('visible', on);
+    if(!on){
+      setNerauHover(null);
+      nerauScope.classList.remove('locked-on');
+    }
+  }
+
+  nerauBtn.addEventListener('click', () => {
+    if(battleOver) return;
+    setNerauMode(!nerauMode);
+  });
+
+  function handleNerauMove(ev){
+    if(!nerauMode) return;
+    const p = stagePointFromEvent(ev);
+    moveScopeTo(p.x, p.y);
+    const rawPoint = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+    const el = findEnemyElUnderPoint(rawPoint.clientX, rawPoint.clientY);
+    setNerauHover(el);
+  }
+
+  function handleNerauTap(ev){
+    if(!nerauMode) return;
+    const rawPoint = (ev.changedTouches && ev.changedTouches[0]) ? ev.changedTouches[0] : ev;
+    const el = findEnemyElUnderPoint(rawPoint.clientX, rawPoint.clientY);
+    if(!el) return;
+    const id = el.dataset.id;
+    const enemyChar = enemyParty.find(c => c.id === id);
+    if(!enemyChar || !enemyChar.alive) return;
+
+    if(pinnedTarget === enemyChar){
+      // 既にピンが刺さっているキャラを再度タップ → ピンを抜く
+      clearPin();
+      logLine(`${enemyChar.name} へのねらいを外した。`);
+    } else {
+      // 別のキャラに刺し直す（すでにピンがあれば自動的に付け替わる）
+      setPinOn(enemyChar);
+    }
+  }
+
+  stage.addEventListener('mousemove', handleNerauMove);
+  stage.addEventListener('touchmove', handleNerauMove, { passive:true });
+  stage.addEventListener('click', handleNerauTap);
+  stage.addEventListener('touchend', handleNerauTap);
 
   // ------------------------------------------------------------
   // ミニゲーム共通の土台
