@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>対戦フィールド</title>
+<style>
+  :root{
+    --gold: #c9a13b;
+    --gold-light: #e8c874;
+    --lacquer-red: #8f2a2a;
+    --lacquer-red-dark: #6b1e1e;
+    --tatami: #cbb373;
+    --tatami-line: #a68f4f;
+    --sky-top: #f4c9d6;
+    --sky-bottom: #f9e3d3;
+    --ink: #2c1a12;
+    --paper: #fbf3e2;
+    --indigo: #1f2f4d;
+    --indigo-dark: #131f34;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:"Hiragino Sans","Yu Gothic",sans-serif;
+  }
+
+  /* ============================================================
+     画面切り替え：.screen を重ねて、.active のものだけ見せる
+  ============================================================ */
+  .app{ position:relative; width:100vw; height:100vh; overflow:hidden; background:var(--indigo-dark); }
+  .screen{
+    position:absolute; inset:0;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.45s ease;
+  }
+  .screen.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ============================================================
+     共通パーツ
+  ============================================================ */
+  .kamon-btn{
+    appearance:none;
+    border:2px solid var(--gold);
+    background:linear-gradient(180deg, var(--paper), #f0e4c8);
+    color:var(--ink);
+    font-family:inherit;
+    font-weight:700;
+    letter-spacing:2px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .kamon-btn:hover{ transform:translateY(-2px); box-shadow:0 9px 18px rgba(0,0,0,0.3); }
+  .kamon-btn:active{ transform:translateY(0px) scale(0.98); box-shadow:0 4px 8px rgba(0,0,0,0.25); }
+  .kamon-btn:disabled{ opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .back-link{
+    position:absolute;
+    top:20px; left:20px;
+    z-index:30;
+    background:rgba(20,10,8,0.4);
+    color:var(--paper);
+    border:1.5px solid var(--gold);
+    border-radius:999px;
+    padding:8px 18px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:1px;
+    cursor:pointer;
+  }
+  .back-link:hover{ background:rgba(20,10,8,0.6); }
+
+  /* ============================================================
+     SCREEN 1: タイトル画面
+  ============================================================ */
+  .title-screen{
+    background:
+      radial-gradient(circle at 50% 20%, rgba(232,200,116,0.18), transparent 55%),
+      linear-gradient(to bottom, var(--indigo) 0%, var(--indigo-dark) 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .title-screen .sun{
+    position:absolute;
+    top:14%;
+    width:220px; height:220px;
+    border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, var(--gold-light), var(--lacquer-red) 70%);
+    box-shadow:0 0 80px rgba(232,200,116,0.35);
+    opacity:0.9;
+  }
+  .title-screen .mist{
+    position:absolute; left:0; right:0; bottom:0; height:40%;
+    background:linear-gradient(to top, rgba(19,31,52,0.95), transparent);
+  }
+  .title-screen .brand{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    color:var(--paper);
+  }
+  .title-screen .brand .eyebrow{
+    font-size:13px;
+    letter-spacing:8px;
+    color:var(--gold-light);
+    margin-bottom:14px;
+  }
+  .title-screen .brand h1{
+    margin:0;
+    font-size:clamp(40px, 8vw, 76px);
+    letter-spacing:14px;
+    font-weight:900;
+    color:var(--paper);
+    text-shadow:0 0 30px rgba(232,200,116,0.4), 0 4px 0 var(--lacquer-red-dark);
+  }
+  .title-screen .brand .sub{
+    margin-top:10px;
+    font-size:14px;
+    letter-spacing:6px;
+    color:rgba(251,243,226,0.65);
+  }
+  .title-screen .start-btn{
+    position:relative;
+    z-index:2;
+    margin-top:56px;
+    padding:16px 56px;
+    font-size:18px;
+    animation:pulseGlow 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow:0 6px 14px rgba(0,0,0,0.25); }
+    50%{ box-shadow:0 6px 26px rgba(232,200,116,0.55); }
+  }
+  .title-screen .version{
+    position:absolute;
+    bottom:18px; right:22px;
+    color:rgba(251,243,226,0.4);
+    font-size:11px;
+    letter-spacing:2px;
+    z-index:2;
+  }
+
+  /* ============================================================
+     SCREEN 2: モード選択画面
+  ============================================================ */
+  .mode-screen{
+    background:linear-gradient(to bottom, var(--indigo) 0%, var(--indigo-dark) 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:36px;
+  }
+  .mode-screen .heading{
+    color:var(--paper);
+    text-align:center;
+  }
+  .mode-screen .heading .eyebrow{
+    font-size:12px;
+    letter-spacing:6px;
+    color:var(--gold-light);
+    margin-bottom:8px;
+  }
+  .mode-screen .heading h2{
+    margin:0;
+    font-size:clamp(24px, 4vw, 34px);
+    letter-spacing:6px;
+    font-weight:900;
+  }
+  .mode-grid{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:0 20px;
+  }
+  .mode-card{
+    width:260px;
+    min-height:220px;
+    background:linear-gradient(180deg, rgba(251,243,226,0.06), rgba(251,243,226,0.02));
+    border:2px solid var(--gold);
+    border-radius:18px;
+    padding:26px 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    color:var(--paper);
+    cursor:pointer;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .mode-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 14px 30px rgba(0,0,0,0.35);
+    border-color:var(--gold-light);
+  }
+  .mode-card .icon-badge{
+    width:64px; height:64px;
+    border-radius:50%;
+    margin-bottom:18px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    color:#fff;
+    border:3px solid var(--paper);
+    box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  }
+  .mode-card.cpu .icon-badge{ background:radial-gradient(circle at 35% 30%, #e08b8b, #a83a3a); }
+  .mode-card.online .icon-badge{ background:radial-gradient(circle at 35% 30%, #8bb8e0, #3a5fa8); }
+  .mode-card h3{
+    margin:0 0 8px;
+    font-size:17px;
+    letter-spacing:3px;
+  }
+  .mode-card p{
+    margin:0;
+    font-size:12.5px;
+    line-height:1.7;
+    color:rgba(251,243,226,0.7);
+  }
+
+  /* ============================================================
+     SCREEN 3: キャラクター編成画面
+  ============================================================ */
+  .roster-screen{
+    background:linear-gradient(to bottom, var(--indigo) 0%, var(--indigo-dark) 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:70px 20px 24px;
+    overflow-y:auto;
+  }
+  .roster-screen .heading{
+    color:var(--paper);
+    text-align:center;
+    margin-bottom:26px;
+  }
+  .roster-screen .heading .eyebrow{
+    font-size:12px;
+    letter-spacing:6px;
+    color:var(--gold-light);
+    margin-bottom:8px;
+  }
+  .roster-screen .heading h2{
+    margin:0;
+    font-size:clamp(22px, 4vw, 30px);
+    letter-spacing:5px;
+    font-weight:900;
+  }
+
+  .roster-slots{
+    display:flex;
+    gap:16px;
+    margin-bottom:34px;
+  }
+  .roster-slot-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .seikaku-select{
+    width:78px;
+    font-size:10px;
+    font-family:inherit;
+    color:var(--ink);
+    background:var(--paper);
+    border:1.5px solid var(--gold);
+    border-radius:8px;
+    padding:2px 2px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .roster-slot{
+    width:78px; height:78px;
+    border-radius:50%;
+    border:3px dashed var(--gold);
+    background:rgba(251,243,226,0.04);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+  .roster-slot.filled{
+    border-style:solid;
+    background:transparent;
+  }
+  .roster-slot .placeholder{
+    color:rgba(251,243,226,0.35);
+    font-size:11px;
+    letter-spacing:1px;
+  }
+  .roster-slot .token{
+    width:100%; height:100%;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:24px; color:#fff;
+    border:3px solid var(--paper);
+    box-shadow:0 6px 14px rgba(0,0,0,0.3);
+  }
+  .roster-slot .order-badge{
+    position:absolute;
+    top:-8px; left:-8px;
+    width:22px; height:22px;
+    border-radius:50%;
+    background:var(--lacquer-red);
+    border:2px solid var(--paper);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .roster-pool{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+    gap:14px;
+    width:100%;
+    max-width:760px;
+    margin-bottom:30px;
+  }
+  .roster-card{
+    background:rgba(251,243,226,0.05);
+    border:2px solid var(--gold);
+    border-radius:14px;
+    padding:14px 10px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    color:var(--paper);
+    transition:transform 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  .roster-card:hover{ transform:translateY(-3px); border-color:var(--gold-light); }
+  .roster-card.selected{
+    border-color:#7ed957;
+    background:rgba(126,217,87,0.12);
+  }
+  .roster-card .token{
+    width:56px; height:56px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:20px; color:#fff;
+    border:3px solid var(--paper);
+  }
+  .roster-card .name{ font-size:12.5px; font-weight:700; letter-spacing:1px; }
+  .roster-card .rank-badge{
+    display:inline-block;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1px;
+    padding:1px 8px;
+    border-radius:999px;
+    margin:2px 0 4px;
+    color:#1a1108;
+    background:var(--gold-light);
+  }
+  .roster-card .rank-badge.rank-S{ background:linear-gradient(135deg,#ffe27a,#ff9d3d); color:#3a1a00; }
+  .roster-card .rank-badge.rank-A{ background:#f0c46a; }
+  .roster-card .rank-badge.rank-B{ background:#cfe08b; }
+  .roster-card .rank-badge.rank-C{ background:#9fd2e0; }
+  .roster-card .rank-badge.rank-D{ background:#b8b8d0; }
+  .roster-card .rank-badge.rank-E{ background:#c9a3a3; }
+  .roster-card .stat{ font-size:10.5px; color:rgba(251,243,226,0.6); }
+
+  .roster-footer{
+    display:flex;
+    align-items:center;
+    gap:18px;
+  }
+  .roster-footer .count{
+    color:var(--paper);
+    font-size:13px;
+    letter-spacing:1px;
+  }
+  .roster-footer .count strong{ color:var(--gold-light); font-size:16px; }
+
+  /* ============================================================
+     SCREEN 4: 対戦フィールド（既存の実装）
+  ============================================================ */
+  .battle-screen .stage{
+    position:relative;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 42%, var(--sky-bottom) 42%);
+  }
+
+  .battle-screen .floor{
+    position:absolute;
+    left:50%;
+    top:38%;
+    width:180%;
+    height:60%;
+    margin-left:-90%;
+    background:
+      repeating-linear-gradient(100deg, transparent 0 40px, var(--tatami-line) 40px 43px),
+      repeating-linear-gradient(80deg, transparent 0 40px, var(--tatami-line) 40px 43px),
+      var(--tatami);
+    clip-path: polygon(38% 0%, 62% 0%, 100% 100%, 0% 100%);
+    box-shadow: inset 0 0 200px rgba(0,0,0,0.2);
+    z-index:1;
+  }
+
+  .battle-screen .horizon-haze{
+    position:absolute;
+    left:0; right:0; top:34%;
+    height:10%;
+    background:linear-gradient(to bottom, rgba(249,227,211,0.9), rgba(249,227,211,0));
+    pointer-events:none;
+    z-index:2;
+  }
+  .battle-screen .vignette{
+    position:absolute; inset:0;
+    box-shadow: inset 0 0 12vw rgba(0,0,0,0.4);
+    pointer-events:none;
+    z-index:20;
+  }
+
+  .battle-screen .backdrop{
+    position:absolute;
+    left:50%;
+    top:4%;
+    transform:translateX(-50%);
+    z-index:3;
+  }
+  .battle-screen .backdrop .arch{
+    width:34vw;
+    max-width:520px;
+    height:14vw;
+    max-height:150px;
+    border:1.2vw solid var(--lacquer-red);
+    border-bottom:none;
+    border-radius:60% 60% 0 0 / 100% 100% 0 0;
+    background:rgba(143,42,42,0.15);
+  }
+
+  .battle-screen .pillar{
+    position:absolute;
+    top:6%;
+    width:1.6vw;
+    max-width:26px;
+    height:22vh;
+    background:linear-gradient(var(--lacquer-red), var(--lacquer-red-dark));
+    border-radius:6px;
+    z-index:3;
+  }
+  .battle-screen .pillar.left{left:5%;}
+  .battle-screen .pillar.right{right:5%;}
+
+  .battle-screen .slot{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    top:0; left:0;
+    transform:translate(-50%, -50%);
+    z-index:10;
+    transition: left 0.5s cubic-bezier(.4,.1,.3,1),
+                top 0.5s cubic-bezier(.4,.1,.3,1);
+    will-change: left, top;
+  }
+  .battle-screen .slot.party-member{
+    pointer-events:none;
+  }
+
+  .battle-screen .token{
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#fff;
+    border:4px solid var(--paper);
+    box-shadow:0 8px 18px rgba(0,0,0,0.35);
+    transition: width 0.5s cubic-bezier(.4,.1,.3,1),
+                height 0.5s cubic-bezier(.4,.1,.3,1),
+                font-size 0.5s cubic-bezier(.4,.1,.3,1),
+                box-shadow 0.5s ease;
+  }
+
+  .battle-screen .nameplate{
+    margin-top:8px;
+    background:var(--paper);
+    color:var(--ink);
+    padding:2px 10px;
+    border-radius:14px;
+    font-size:13px;
+    font-weight:700;
+    border:2px solid var(--gold);
+    white-space:nowrap;
+    transition: opacity 0.3s ease, font-size 0.5s ease;
+  }
+
+  .battle-screen .hpbar{
+    margin-top:6px;
+    width:80px;
+    height:8px;
+    background:rgba(0,0,0,0.25);
+    border-radius:4px;
+    overflow:visible;
+    border:1px solid rgba(0,0,0,0.3);
+    transition: width 0.5s ease, opacity 0.3s ease, margin-top 0.5s ease;
+    position:relative;
+  }
+  .battle-screen .hpbar > div:last-child{
+    height:100%;
+    max-width:100%;
+    border-radius:3px;
+    overflow:hidden;
+    background:linear-gradient(90deg,#f2a0c4,#d84a8c);
+  }
+
+  /* ---- 必殺技ゲージ（しずく型、体力バーの左に少し重ねる） ---- */
+  .battle-screen .ultgauge{
+    position:absolute;
+    left:-11px;
+    top:50%;
+    transform:translateY(-50%);
+    width:20px;
+    height:20px;
+    z-index:2;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+    transition: width 0.5s ease, height 0.5s ease, left 0.5s ease;
+  }
+  .battle-screen .ultgauge svg{ width:100%; height:100%; display:block; }
+  .battle-screen .ultgauge .ult-bg{
+    fill:rgba(10,20,40,0.55);
+    stroke:rgba(255,255,255,0.5);
+    stroke-width:3;
+  }
+  .battle-screen .ultgauge .ult-fill{
+    fill:#4fa3f0;
+  }
+  .battle-screen .ultgauge clipPath rect{
+    transition: y 0.1s linear, height 0.1s linear;
+  }
+
+  .battle-screen .enemy .token{ width:64px; height:64px; font-size:22px; }
+  .battle-screen .enemy .nameplate{ font-size:11px; }
+  .battle-screen .enemy .hpbar{ width:56px; }
+
+  .battle-screen .slot.enemy-member{ pointer-events:auto; cursor:pointer; }
+
+  .battle-screen .enemy-member.state-front .token{ width:88px; height:88px; font-size:26px; }
+  .battle-screen .enemy-member.state-front .nameplate{ font-size:13px; opacity:1; }
+
+  /* 敵キャラは体力メーター・必殺技ゲージを表示しない */
+  .battle-screen .enemy-member .hpbar,
+  .battle-screen .enemy-member .ultgauge{
+    display:none;
+  }
+
+  /* 敵の後衛は表示しない */
+  .battle-screen .enemy-member.state-reserve{
+    display:none;
+  }
+  .battle-screen .enemy-member.dead{ cursor:not-allowed; }
+
+  /* ---- 気絶＝青い人魂化演出 ---- */
+  @keyframes soulFloat{
+    0%,100%{ transform:translateY(0) rotate(-3deg); }
+    50%{ transform:translateY(-8px) rotate(3deg); }
+  }
+  @keyframes soulFlicker{
+    0%,100%{ opacity:0.85; }
+    50%{ opacity:1; }
+  }
+  .slot.dead .token{
+    width:34px !important;
+    height:34px !important;
+    font-size:0 !important;
+    background:radial-gradient(circle at 40% 30%, #d8ecff, #5aa8e8 55%, #2f6fb0 100%) !important;
+    border-color:#bfe3ff;
+    box-shadow:0 0 14px 4px rgba(90,170,255,0.65), 0 8px 14px rgba(0,0,0,0.3);
+    color:transparent;
+    position:relative;
+    filter:none;
+    opacity:1;
+    animation:soulFloat 2.4s ease-in-out infinite, soulFlicker 1.6s ease-in-out infinite;
+    /* 人魂らしい丸い雫型に */
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  }
+  .slot.dead .token::before{
+    content:'';
+    position:absolute;
+    top:14%; left:50%;
+    width:22%; height:22%;
+    background:rgba(255,255,255,0.85);
+    border-radius:50%;
+    transform:translateX(-50%);
+    filter:blur(1px);
+  }
+  .slot.dead .token::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+  }
+  .slot.dead .nameplate{ opacity:0.55; }
+  .slot.dead .hpbar{ opacity:0.4; }
+
+  .battle-screen .party-member.state-front .token{ width:110px; height:110px; font-size:32px; }
+  .battle-screen .party-member.state-front .nameplate{ font-size:15px; opacity:1; }
+  .battle-screen .party-member.state-front .hpbar{ width:100px; opacity:1; }
+
+  /* ---- バフ／デバフのオーラ ---- */
+  @keyframes auraBuffPulse{
+    0%,100%{ box-shadow:0 8px 18px rgba(0,0,0,0.35), 0 0 14px 5px rgba(255,183,59,0.8), 0 0 26px 10px rgba(255,140,20,0.45); }
+    50%{ box-shadow:0 8px 18px rgba(0,0,0,0.35), 0 0 20px 8px rgba(255,200,90,0.95), 0 0 36px 14px rgba(255,150,30,0.6); }
+  }
+  @keyframes auraDebuffPulse{
+    0%,100%{ box-shadow:0 8px 18px rgba(0,0,0,0.35), 0 0 14px 5px rgba(120,70,150,0.75), 0 0 26px 10px rgba(70,35,95,0.5); }
+    50%{ box-shadow:0 8px 18px rgba(0,0,0,0.35), 0 0 18px 7px rgba(140,85,170,0.85), 0 0 32px 12px rgba(85,45,115,0.6); }
+  }
+  .slot.aura-buff .token{
+    animation: auraBuffPulse 1.6s ease-in-out infinite;
+  }
+  .slot.aura-debuff .token{
+    animation: auraDebuffPulse 1.8s ease-in-out infinite;
+  }
+  /* デバフのオーラを優先表示（同時付与時はデバフのアニメーションのみ有効） */
+  .slot.aura-buff.aura-debuff .token{
+    animation: auraDebuffPulse 1.8s ease-in-out infinite;
+  }
+
+  .battle-screen .party-member.state-reserve .token{
+    width:34px; height:34px; font-size:13px;
+    border:2px solid var(--gold-light);
+    box-shadow:0 3px 6px rgba(0,0,0,0.3);
+  }
+  .battle-screen .party-member.state-reserve .nameplate{ opacity:0; font-size:0; padding:0; border:0; margin-top:0; }
+  /* 後衛でも体力メーターは表示したままにする（小さいトークンに合わせて縮小） */
+  .battle-screen .party-member.state-reserve .hpbar{ width:36px; height:5px; margin-top:4px; opacity:1; }
+  .battle-screen .party-member.state-reserve .ultgauge{ width:12px; height:14.5px; left:-7px; }
+
+  /* キャラの色バリエーション（画面共通で使用） */
+  .c-purple{ background:radial-gradient(circle at 35% 30%, #b98ee0, #7b3fb0); }
+  .c-cream { background:radial-gradient(circle at 35% 30%, #fff3d6, #e0b45c); }
+  .c-green { background:radial-gradient(circle at 35% 30%, #a8e6a1, #4c9a4c); }
+  .c-red   { background:radial-gradient(circle at 35% 30%, #e08b8b, #a83a3a); }
+  .c-blue  { background:radial-gradient(circle at 35% 30%, #8bb8e0, #3a5fa8); }
+  .c-orange{ background:radial-gradient(circle at 35% 30%, #f0b878, #c47a2f); }
+  .c-teal  { background:radial-gradient(circle at 35% 30%, #8fe0d0, #2f9c86); }
+  .c-pink  { background:radial-gradient(circle at 35% 30%, #f0a8c8, #c4477f); }
+
+  .battle-screen .command-bar{
+    position:absolute;
+    left:50%;
+    bottom:3%;
+    transform:translateX(-50%);
+    width:220px;
+    height:50px;
+    border-radius:30px;
+    z-index:14;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .battle-screen .command-bar.dragging{
+    cursor:grabbing;
+  }
+  .battle-screen .command-bar.locked{
+    cursor:not-allowed;
+  }
+
+  /* ---- 回転タイマーのリング（ドラッグ中の4秒カウント） ---- */
+  /* 後衛キャラのアイコンと被らないよう、command-barのさらに上に配置する */
+  .battle-screen .timer-ring{
+    position:absolute;
+    left:50%; bottom:100%;
+    margin-bottom:14px;
+    width:48px; height:48px;
+    transform:translateX(-50%) rotate(-90deg);
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.2s ease;
+    z-index:16;
+  }
+  .battle-screen .timer-ring.visible{ opacity:1; }
+  .battle-screen .timer-ring-bg{
+    fill:none;
+    stroke:rgba(0,0,0,0.35);
+    stroke-width:8;
+  }
+  .battle-screen .timer-ring-fg{
+    fill:none;
+    stroke:var(--gold-light);
+    stroke-width:8;
+    stroke-linecap:round;
+    stroke-dasharray:276.5;
+    stroke-dashoffset:0;
+    transition:stroke 0.2s ease;
+  }
+  .battle-screen .timer-ring-fg.urgent{
+    stroke:#e05a4e;
+  }
+  .battle-screen .timer-ring-fg.cooldown{
+    stroke:#7a8aa0;
+  }
+
+  /* ---- カウントダウン数字（残り3秒を切ったら表示）。リングの中央に重ねる ---- */
+  .battle-screen .timer-countdown{
+    position:absolute;
+    left:50%; bottom:100%;
+    margin-bottom:14px;
+    width:48px; height:48px;
+    transform:translateX(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:900;
+    color:var(--paper);
+    text-shadow:0 2px 6px rgba(0,0,0,0.6);
+    z-index:17;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.15s ease;
+  }
+  .battle-screen .timer-countdown.visible{ opacity:1; }
+  .battle-screen .timer-countdown.urgent{ color:#ff9d8f; }
+
+  /* ---- クールタイム中のラベル表示 ---- */
+  .battle-screen .cooldown-label{
+    position:absolute;
+    left:50%;
+    bottom:100%;
+    margin-bottom:70px;
+    transform:translateX(-50%);
+    background:rgba(30,15,10,0.75);
+    color:var(--paper);
+    border:2px solid #7a8aa0;
+    border-radius:20px;
+    padding:6px 18px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    white-space:nowrap;
+    z-index:16;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease;
+  }
+  .battle-screen .cooldown-label.visible{ opacity:1; }
+
+  /* ---- 右下のコマンドボタン（おはらい／アイテム） ---- */
+  .battle-screen .action-menu{
+    position:absolute;
+    right:3%;
+    bottom:3%;
+    z-index:15;
+    display:flex;
+    gap:10px;
+  }
+  /* ---- 左下のコマンドボタン（わざ／ねらう） ---- */
+  .battle-screen .action-menu-left{
+    position:absolute;
+    left:3%;
+    bottom:3%;
+    z-index:15;
+    display:flex;
+    gap:10px;
+  }
+  .battle-screen .action-menu button,
+  .battle-screen .action-menu-left button{
+    appearance:none;
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    font-size:14px;
+    font-weight:900;
+    letter-spacing:1px;
+    color:var(--paper);
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .battle-screen .action-menu button:active{
+    transform:translateY(1px);
+  }
+  .battle-screen .action-menu-left button:active{
+    transform:translateY(1px);
+  }
+  .battle-screen .action-menu-left .btn-waza{
+    background:linear-gradient(180deg,#e2564a,#b8352b);
+  }
+  .battle-screen .action-menu-left .btn-nerau{
+    background:linear-gradient(180deg,#4a90d9,#2c5f9e);
+  }
+  .battle-screen .action-menu .btn-oharai{
+    background:linear-gradient(180deg,#9a6ad0,#6a3f9c);
+  }
+  .battle-screen .action-menu .btn-item{
+    background:linear-gradient(180deg,#9aa1ab,#6c727b);
+    cursor:not-allowed;
+    opacity:0.65;
+  }
+
+  .battle-screen .turn-label{
+    position:absolute;
+    top:2%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--lacquer-red-dark);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:4px;
+    background:var(--paper);
+    padding:4px 16px;
+    border-radius:12px;
+    border:2px solid var(--gold);
+    z-index:15;
+  }
+
+  /* ---- 動作確認用ログパネル ---- */
+  .battle-screen .battle-log{
+    position:absolute;
+    top:8%;
+    right:14px;
+    width:210px;
+    max-height:34%;
+    overflow-y:auto;
+    background:rgba(10,10,20,0.55);
+    border:1.5px solid var(--gold);
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:11px;
+    line-height:1.6;
+    color:var(--paper);
+    z-index:20;
+  }
+  .battle-screen .battle-log .log-line{ opacity:0.9; }
+  .battle-screen .battle-log .log-line.miss{ color:#9fd2ff; }
+  .battle-screen .battle-log .log-line.dead{ color:#ff9d9d; font-weight:700; }
+  .battle-screen .battle-log .log-line.critical{ color:#ffd54a; font-weight:700; }
+
+  .battle-screen .enemy{ cursor:pointer; }
+  .battle-screen .enemy.dead{ cursor:not-allowed; }
+  .battle-screen .enemy.target-hint{ filter:drop-shadow(0 0 8px var(--gold-light)); }
+
+  /* ---- 行動種類の吹き出し（物理攻撃以外の行動時に表示） ---- */
+  @keyframes actionBubbleIn{
+    0%{ opacity:0; transform:translate(-50%, 6px) scale(0.85); }
+    15%{ opacity:1; transform:translate(-50%, 0) scale(1.05); }
+    25%{ transform:translate(-50%, 0) scale(1); }
+    85%{ opacity:1; }
+    100%{ opacity:0; transform:translate(-50%, -6px) scale(0.95); }
+  }
+  .battle-screen .action-bubble{
+    position:absolute;
+    left:50%;
+    bottom:100%;
+    margin-bottom:8px;
+    transform:translate(-50%, 0);
+    white-space:nowrap;
+    background:var(--paper);
+    color:var(--ink);
+    border:2px solid var(--gold);
+    border-radius:14px;
+    padding:4px 12px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    z-index:26;
+    pointer-events:none;
+    animation:actionBubbleIn 1.6s ease forwards;
+  }
+  .battle-screen .action-bubble::after{
+    content:'';
+    position:absolute;
+    top:100%;
+    left:50%;
+    transform:translateX(-50%);
+    border:6px solid transparent;
+    border-top-color:var(--gold);
+  }
+  .battle-screen .action-bubble::before{
+    content:'';
+    position:absolute;
+    top:100%;
+    left:50%;
+    transform:translateX(-50%) translateY(-2px);
+    border:5px solid transparent;
+    border-top-color:var(--paper);
+    z-index:1;
+  }
+
+  /* ---- 攻撃対象を示す三角矢印 ---- */
+  .battle-screen .target-arrow{
+    position:absolute;
+    top:-22px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:20px;
+    line-height:1;
+    color:#ff5252;
+    text-shadow:0 0 6px rgba(255,82,82,0.8), 0 2px 2px rgba(0,0,0,0.5);
+    z-index:25;
+    animation:arrowBounce 0.6s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes arrowBounce{
+    0%{ transform:translateX(-50%) translateY(0); }
+    100%{ transform:translateX(-50%) translateY(6px); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============================================================
+       SCREEN 1: タイトル画面
+  ============================================================ -->
+  <div class="screen title-screen active" id="screen-title">
+    <div class="sun"></div>
+    <div class="mist"></div>
+    <div class="brand">
+      <div class="eyebrow">和 風 対 戦 ゲ ー ム</div>
+      <h1>剣影絵巻</h1>
+      <div class="sub">KEN'EI EMAKI</div>
+    </div>
+    <button class="kamon-btn start-btn" data-goto="screen-mode">はじめる</button>
+    <div class="version">Ver 0.1</div>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 2: モード選択画面（CPU戦 / オンライン対戦）
+  ============================================================ -->
+  <div class="screen mode-screen" id="screen-mode">
+    <button class="back-link" data-goto="screen-title">← もどる</button>
+    <div class="heading">
+      <div class="eyebrow">MODE SELECT</div>
+      <h2>たいせん を えらぶ</h2>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card cpu" data-goto="screen-roster" data-mode="cpu">
+        <div class="icon-badge">龍</div>
+        <h3>CPU戦</h3>
+        <p>コンピューターの敵将と一人で戦う。<br>練習や腕試しに。</p>
+      </div>
+      <div class="mode-card online" data-goto="screen-roster" data-mode="online">
+        <div class="icon-badge">対</div>
+        <h3>オンライン対戦</h3>
+        <p>他のプレイヤーと編成を競う。<br>マッチング開始まで少し時間がかかります。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 3: キャラクター編成画面
+  ============================================================ -->
+  <div class="screen roster-screen" id="screen-roster">
+    <button class="back-link" data-goto="screen-mode">← もどる</button>
+    <div class="heading">
+      <div class="eyebrow" id="modeLabel">MODE：CPU戦</div>
+      <h2>キャラクター へんせい</h2>
+    </div>
+
+    <!-- 出撃メンバー（最大6体、先頭3体が前衛になる） -->
+    <div class="roster-slots" id="rosterSlots"></div>
+
+    <!-- 選択候補キャラ一覧 -->
+    <div class="roster-pool" id="rosterPool"></div>
+
+    <div class="roster-footer">
+      <div class="count"><strong id="selectedCount">0</strong> / 6 にん せんたく中</div>
+      <button class="kamon-btn" id="toBattleBtn" data-goto="screen-battle" disabled style="padding:12px 40px;">たいせん フィールドへ</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 4: 対戦フィールド（既存の実装）
+  ============================================================ -->
+  <div class="screen battle-screen" id="screen-battle">
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="horizon-haze"></div>
+
+      <div class="backdrop"><div class="arch"></div></div>
+      <div class="pillar left"></div>
+      <div class="pillar right"></div>
+
+      <div class="turn-label">たいせん フィールド</div>
+
+      <!-- 敵側6体を固定DOM要素として動的生成し、JSで前衛/後衛の位置に実際に移動させる -->
+      <div id="enemyLayer"></div>
+
+      <!-- 自分のパーティ全6体を固定DOM要素として生成し、JSで前衛/後衛の位置に実際に移動させる -->
+      <div id="partyLayer"></div>
+
+      <div class="vignette"></div>
+
+      <div id="battleLog" class="battle-log"></div>
+
+      <!-- ドラッグ検出用のヒットエリア（下部帯）＋タイマー表示 -->
+      <div class="command-bar" id="commandBar">
+        <svg class="timer-ring" id="timerRing" viewBox="0 0 100 100">
+          <circle class="timer-ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle class="timer-ring-fg" id="timerRingFg" cx="50" cy="50" r="44"></circle>
+        </svg>
+        <div class="timer-countdown" id="timerCountdown"></div>
+        <div class="cooldown-label" id="cooldownLabel"></div>
+      </div>
+
+      <!-- 左下：コマンドボタン（わざ／ねらう） -->
+      <div class="action-menu-left">
+        <button type="button" class="btn-waza">わざ</button>
+        <button type="button" class="btn-nerau">ねらう</button>
+      </div>
+
+      <!-- 右下：コマンドボタン（アイテムは現状使用不可） -->
+      <div class="action-menu">
+        <button type="button" class="btn-oharai">おはらい</button>
+        <button type="button" class="btn-item" disabled>アイテム</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   画面遷移まわり
+============================================================ */
+const screens = [...document.querySelectorAll('.screen')];
+function showScreen(id){
+  screens.forEach(s => s.classList.toggle('active', s.id === id));
+  if(id === 'screen-battle') initBattleIfNeeded();
+}
+document.querySelectorAll('[data-goto]').forEach(el => {
+  el.addEventListener('click', () => {
+    if(el.hasAttribute('disabled')) return;
+    if(el.dataset.mode){ selectedMode = el.dataset.mode; updateModeLabel(); }
+    showScreen(el.dataset.goto);
+  });
+});
+
+/* ============================================================
+   SCREEN 2: モード選択の状態
+============================================================ */
+let selectedMode = 'cpu';
+function updateModeLabel(){
+  const label = document.getElementById('modeLabel');
+  label.textContent = 'MODE：' + (selectedMode === 'cpu' ? 'CPU戦' : 'オンライン対戦');
+}
+
+/* ============================================================
+   SCREEN 3: キャラクター編成
+============================================================ */
+// ============================================================
+// 性格システム
+//   ①サボりやすさ性格：行動時に「サボる」を選びやすいかどうかを決める
+//   ②行動性格：キャラ編成時にプレイヤーが選ぶ。得意な行動（物理/妖術攻撃・
+//     デバフとりつき・バフとりつき・ガード）の出やすさと、ステータス補正が変わる
+// ============================================================
+
+// ①サボりやすさ性格：超まじめ(0%)～ビビリ(80%)の7段階。値は「サボりを選ぶ確率」
+const SLACK_PERSONALITIES = [
+  { id:'chomajime', name:'超まじめ',   rate:0.000 },
+  { id:'majime',    name:'まじめ',     rate:0.025 },
+  { id:'sunao',     name:'すなお',     rate:0.10  },
+  { id:'kimama',    name:'気まま',     rate:0.25  },
+  { id:'zubora',    name:'ずぼら',     rate:0.40  },
+  { id:'chozubora', name:'超ずぼら',   rate:0.55  },
+  { id:'bibiri',    name:'ビビリ',     rate:0.80  },
+];
+function getSlackPersonality(id){
+  return SLACK_PERSONALITIES.find(p => p.id === id) || SLACK_PERSONALITIES[2]; // 既定は「すなお」
+}
+
+// ②行動性格：「特化」は対応する行動を約75%、「重視」は約50%の確率で選ぶ。
+//   残りの確率は、その行動以外の3行動に均等に配分する。
+//   possess時にバフ狙いかデバフ狙いかも性格で決まる（possessBias）。
+//   bonuses はキャラ編成時に加算されるステータス補正。
+//   hpScaling が true の性格（動じない・しんちょう）は、自身の残りHP割合が
+//   低いほど mainAction（ガード）を選ぶ確率がさらに上がる。
+const ACTION_PERSONALITIES = [
+  { id:'araku',    name:'荒くれ',     desc:'攻撃特化',           mainAction:'physical', mainRate:0.75, possessBias:0.5,
+    bonuses:{ chikara:26 } },
+  { id:'tanki',    name:'短気',       desc:'攻撃重視',           mainAction:'physical', mainRate:0.50, possessBias:0.5,
+    bonuses:{ chikara:9, hp:18 } },
+  { id:'zunouteki',name:'ずのう的',   desc:'妖術攻撃特化',       mainAction:'magic',    mainRate:0.75, possessBias:0.5,
+    bonuses:{ youjutsu:26 } },
+  { id:'reisei',   name:'れいせい',   desc:'妖術攻撃重視',       mainAction:'magic',    mainRate:0.50, possessBias:0.5,
+    bonuses:{ youjutsu:13, subayasa:13 } },
+  { id:'nasakebukai', name:'情け深い', desc:'妖術回復特化',      mainAction:'possess',  mainRate:0.75, possessBias:0.9,
+    bonuses:{ hp:52 } },
+  { id:'yasashii', name:'やさしい',   desc:'妖術回復重視',       mainAction:'possess',  mainRate:0.50, possessBias:0.75,
+    bonuses:{ hp:18, youjutsu:9 } },
+  { id:'hidou',    name:'非道',       desc:'デバフとりつき特化', mainAction:'possess',  mainRate:0.75, possessBias:0.05,
+    bonuses:{ subayasa:26 } },
+  { id:'iyarashii',name:'いやらしい', desc:'デバフとりつき重視', mainAction:'possess',  mainRate:0.50, possessBias:0.2,
+    bonuses:{ subayasa:13, chikara:13 } },
+  { id:'kenshinteki', name:'けんしん的', desc:'バフとりつき特化', mainAction:'possess',  mainRate:0.75, possessBias:0.95,
+    bonuses:{ chikara:13, mamori:13 } },
+  { id:'kyoryokuteki', name:'協力的', desc:'バフとりつき重視',   mainAction:'possess',  mainRate:0.50, possessBias:0.8,
+    bonuses:{ hp:18, subayasa:9 } },
+  { id:'dojinai',  name:'動じない',   desc:'ガード特化',         mainAction:'guard',    mainRate:0.75, possessBias:0.5, hpScaling:true,
+    bonuses:{ mamori:26 } },
+  { id:'shinchou', name:'しんちょう', desc:'ガード重視',         mainAction:'guard',    mainRate:0.50, possessBias:0.5, hpScaling:true,
+    bonuses:{ mamori:13, youjutsu:13 } },
+];
+function getActionPersonality(id){
+  return ACTION_PERSONALITIES.find(p => p.id === id) || null;
+}
+
+// 行動性格から、このターンの行動選択の確率テーブル（physical/magic/guard/possess の4つ、合計1.0）を作る。
+// hpScaling な性格は、残りHP割合が低いほど mainAction（ガード）の比率が上がる
+// （満タン時は定義通りの確率、瀕死時はさらに+20%ポイント程度まで上乗せ、上限95%）。
+function buildActionRateTable(actor){
+  const ALL_ACTIONS = ['physical', 'magic', 'guard', 'possess'];
+  const p = actor.actionSeikaku;
+  if(!p){
+    return { physical:0.25, magic:0.25, guard:0.25, possess:0.25 };
+  }
+  let mainRate = p.mainRate;
+  if(p.hpScaling){
+    const hpRatio = actor.maxHp > 0 ? Math.max(0, Math.min(1, actor.hp / actor.maxHp)) : 1;
+    const bonus = (1 - hpRatio) * 0.20; // HPが減るほど最大+20%ポイント
+    mainRate = Math.min(0.95, p.mainRate + bonus);
+  }
+  const others = ALL_ACTIONS.filter(a => a !== p.mainAction);
+  const otherRate = (1 - mainRate) / others.length;
+  const table = {};
+  ALL_ACTIONS.forEach(a => { table[a] = (a === p.mainAction) ? mainRate : otherRate; });
+  return table;
+}
+
+
+// 選ばれた行動性格のステータス補正を、キャラの基礎ステータス（およびmaxHp）に加算する
+function applyPersonalityBonuses(baseStats, baseHp, actionPersonalityId){
+  const stats = { chikara: baseStats.chikara, mamori: baseStats.mamori, youjutsu: baseStats.youjutsu, subayasa: baseStats.subayasa };
+  let hp = baseHp;
+  const p = getActionPersonality(actionPersonalityId);
+  if(p && p.bonuses){
+    if(p.bonuses.chikara) stats.chikara += p.bonuses.chikara;
+    if(p.bonuses.mamori) stats.mamori += p.bonuses.mamori;
+    if(p.bonuses.youjutsu) stats.youjutsu += p.bonuses.youjutsu;
+    if(p.bonuses.subayasa) stats.subayasa += p.bonuses.subayasa;
+    if(p.bonuses.hp) hp += p.bonuses.hp;
+  }
+  return { stats, hp };
+}
+
+// 選べるキャラのプール（本来はサーバーやセーブデータから取得する想定のダミーデータ）
+const characterPool = [
+  { id:'p1', cls:'c-cream',  label:'A', name:'ブシニャン', rank:'S', no:322, zoku:'イサマシ族', maxHp:272, slackSeikaku:'sunao',
+    stats:{ chikara:157, mamori:95, youjutsu:89, subayasa:158 },
+    skill:{ name:'超クリティカル', desc:'クリティカルのいりょくが高くなる(2.0倍)', critMultiplier:2.0 },
+    tokui:'風', jaku:'氷',
+    physical:{ name:'閃光ぎり', power:20, hits:3 },
+    magic:{ name:'嵐の術', power:80, element:'風' },
+    possess:{ name:'武士の心', desc:'ちから大アップ', kind:'buff', grade:'large', scope:'single', stat:'chikara' },
+    ult:{ name:'かつおブシ斬り', power:25, hits:10, target:'all' }
+  },
+  { id:'p2', cls:'c-orange', label:'B', name:'犬神', rank:'S', no:81, zoku:'フシギ族', maxHp:273, slackSeikaku:'sunao',
+    stats:{ chikara:88, mamori:103, youjutsu:177, subayasa:128 },
+    skill:{ name:'きゅうかく', desc:'攻撃が必ず命中する', alwaysHit:true },
+    tokui:'氷', jaku:'火',
+    physical:{ name:'しっぽうち', power:100 },
+    magic:{ name:'吹雪の術', power:80, element:'氷' },
+    possess:{ name:'犬神の加護', desc:'ようりょくアップ', kind:'buff', grade:'normal', scope:'single', stat:'youjutsu' },
+    ult:{ name:'氷結地獄', power:250, target:'all' }
+  },
+  { id:'p3', cls:'c-blue', label:'C', name:'黒鬼', rank:'S', no:440, zoku:'ゴーケツ族', maxHp:456, slackSeikaku:'sunao',
+    stats:{ chikara:177, mamori:189, youjutsu:81, subayasa:98 },
+    skill:{ name:'におうだち', desc:'真ん中にいる時だけまもりアップ', middleMamoriBoost:true },
+    tokui:'氷', jaku:'風',
+    physical:{ name:'ドクロ割り', power:75 },
+    magic:{ name:'死神の術', power:80, element:'吸収' },
+    possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
+    ult:{ name:'悪夢の金棒', power:350, target:'single' }
+  },
+  { id:'p4', cls:'c-purple', label:'D', name:'ネタバレリーナ', rank:'S', no:325, zoku:'プリチー族', maxHp:265, slackSeikaku:'sunao',
+    stats:{ chikara:100, mamori:98, youjutsu:130, subayasa:174 },
+    skill:{ name:'かれいなステップ', desc:'敵の妖術をよけまくる(回避率40%ほど)', magicEvasionBonus:0.4 },
+    tokui:'風', jaku:'氷',
+    physical:{ name:'はりたおす', power:20, hits:2 },
+    magic:{ name:'嵐の術', power:80, element:'風' },
+    possess:{ name:'ネタバレさせる', desc:'常に敵から狙われる', kind:'buff', taunt:true },
+    ult:{ name:'ネタバレフィナーレ', power:0, target:'self', heal:'full', buffAll:true, desc:'HPを全回復しつつ全ステータスアップ' }
+  },
+  { id:'p5', cls:'c-red',    label:'E', name:'じぶんキャラ5', rank:'E', slackSeikaku:'sunao', stats:{ chikara:60, mamori:40, youjutsu:35, subayasa:90 } },
+  { id:'p6', cls:'c-green',  label:'F', name:'じぶんキャラ6', rank:'S', slackSeikaku:'sunao', stats:{ chikara:72, mamori:75, youjutsu:85, subayasa:66 } },
+  { id:'p7', cls:'c-teal',   label:'G', name:'じぶんキャラ7', rank:'B', slackSeikaku:'sunao', stats:{ chikara:55, mamori:50, youjutsu:80, subayasa:95 } },
+  { id:'p8', cls:'c-pink',   label:'H', name:'じぶんキャラ8', rank:'C', slackSeikaku:'sunao', stats:{ chikara:68, mamori:60, youjutsu:74, subayasa:74 } },
+];
+const MAX_ROSTER = 6;
+let selectedIds = []; // 選ばれた順が、そのまま「前衛→後衛」の並びになる
+let actionSeikakuMap = {}; // charId -> 行動性格id（編成時にプレイヤーが選択）
+const DEFAULT_ACTION_SEIKAKU = 'tanki';
+
+// CPU（対戦相手）側のキャラクター。プレイヤー側と同じく6体で、前衛3体・後衛3体を編成する。
+const enemyPool = [
+  { id:'e1', cls:'c-purple', label:'?', name:'てきキャラA', rank:'B', stats:{ chikara:60, mamori:50, youjutsu:40, subayasa:55 } },
+  { id:'e2', cls:'c-red',    label:'?', name:'てきキャラB', rank:'A', stats:{ chikara:70, mamori:40, youjutsu:55, subayasa:65 } },
+  { id:'e3', cls:'c-green',  label:'?', name:'てきキャラC', rank:'C', stats:{ chikara:50, mamori:60, youjutsu:60, subayasa:45 } },
+  { id:'e4', cls:'c-teal',   label:'?', name:'てきキャラD', rank:'D', stats:{ chikara:58, mamori:55, youjutsu:45, subayasa:70 } },
+  { id:'e5', cls:'c-orange', label:'?', name:'てきキャラE', rank:'S', stats:{ chikara:80, mamori:65, youjutsu:35, subayasa:50 } },
+  { id:'e6', cls:'c-pink',   label:'?', name:'てきキャラF', rank:'E', stats:{ chikara:45, mamori:35, youjutsu:65, subayasa:75 } },
+];
+
+const rosterSlotsEl = document.getElementById('rosterSlots');
+const rosterPoolEl = document.getElementById('rosterPool');
+const selectedCountEl = document.getElementById('selectedCount');
+const toBattleBtn = document.getElementById('toBattleBtn');
+
+function renderRosterSlots(){
+  rosterSlotsEl.innerHTML = '';
+  for(let i=0;i<MAX_ROSTER;i++){
+    const wrapEl = document.createElement('div');
+    wrapEl.className = 'roster-slot-wrap';
+    const slotEl = document.createElement('div');
+    const charId = selectedIds[i];
+    if(charId){
+      const c = characterPool.find(x => x.id === charId);
+      slotEl.className = 'roster-slot filled';
+      slotEl.innerHTML = `
+        <div class="order-badge">${i < 3 ? '前' : '後'}${(i % 3) + 1}</div>
+        <div class="token ${c.cls}">${c.label}</div>
+      `;
+      wrapEl.appendChild(slotEl);
+
+      const currentSeikaku = actionSeikakuMap[charId] || DEFAULT_ACTION_SEIKAKU;
+      const select = document.createElement('select');
+      select.className = 'seikaku-select';
+      select.innerHTML = ACTION_PERSONALITIES.map(p =>
+        `<option value="${p.id}" ${p.id === currentSeikaku ? 'selected' : ''}>${p.name}</option>`
+      ).join('');
+      select.addEventListener('click', (e) => e.stopPropagation());
+      select.addEventListener('change', (e) => {
+        actionSeikakuMap[charId] = e.target.value;
+      });
+      wrapEl.appendChild(select);
+    } else {
+      slotEl.className = 'roster-slot';
+      slotEl.innerHTML = `<div class="placeholder">${i+1}</div>`;
+      wrapEl.appendChild(slotEl);
+    }
+    rosterSlotsEl.appendChild(wrapEl);
+  }
+}
+
+function renderRosterPool(){
+  rosterPoolEl.innerHTML = '';
+  characterPool.forEach(c => {
+    const isSelected = selectedIds.includes(c.id);
+    const card = document.createElement('div');
+    card.className = 'roster-card' + (isSelected ? ' selected' : '');
+    card.innerHTML = `
+      <div class="token ${c.cls}">${c.label}</div>
+      <div class="name">${c.name}</div>
+      <div class="rank-badge rank-${c.rank}">${c.rank}</div>
+      ${c.no ? `<div class="stat">No.${c.no}${c.zoku ? ' / ' + c.zoku : ''}</div>` : ''}
+      <div class="stat">ちから ${c.stats.chikara} / まもり ${c.stats.mamori}</div>
+      <div class="stat">ようじゅつ ${c.stats.youjutsu} / すばやさ ${c.stats.subayasa}</div>
+    `;
+    card.addEventListener('click', () => toggleCharacter(c.id));
+    rosterPoolEl.appendChild(card);
+  });
+}
+
+function toggleCharacter(id){
+  const idx = selectedIds.indexOf(id);
+  if(idx >= 0){
+    selectedIds.splice(idx, 1);
+    delete actionSeikakuMap[id];
+  } else {
+    if(selectedIds.length >= MAX_ROSTER) return; // 満員
+    selectedIds.push(id);
+    if(!actionSeikakuMap[id]) actionSeikakuMap[id] = DEFAULT_ACTION_SEIKAKU;
+  }
+  renderRosterSlots();
+  renderRosterPool();
+  selectedCountEl.textContent = selectedIds.length;
+  toBattleBtn.disabled = selectedIds.length < 3; // 前衛3体分は最低限必要
+}
+
+renderRosterSlots();
+renderRosterPool();
+updateModeLabel();
+
+/* ============================================================
+   SCREEN 4: 対戦フィールド（既存ロジック。編成結果を反映して初期化）
+============================================================ */
+let battleInitialized = false;
+
+function initBattleIfNeeded(){
+  if(battleInitialized) return;
+  battleInitialized = true;
+  startBattleField();
+}
+
+function startBattleField(){
+  // 編成画面で選んだキャラをそのままパーティにする。
+  // 6体に満たない場合は、プールの残りから自動で補充する。
+  let chosen = selectedIds.map(id => characterPool.find(c => c.id === id));
+  characterPool.forEach(c => {
+    if(chosen.length < MAX_ROSTER && !chosen.includes(c)) chosen.push(c);
+  });
+  chosen = chosen.slice(0, MAX_ROSTER);
+
+  let party = chosen.map((c, i) => {
+    const baseStats = c.stats || { chikara:60, mamori:60, youjutsu:60, subayasa:60 };
+    const baseHp = c.maxHp || 100;
+    const actionSeikakuId = actionSeikakuMap[c.id] || DEFAULT_ACTION_SEIKAKU;
+    const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, actionSeikakuId);
+    return {
+      id:i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:0, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null,
+      slackSeikaku: getSlackPersonality(c.slackSeikaku), actionSeikaku: getActionPersonality(actionSeikakuId)
+    };
+  });
+
+  // CPU側の編成。プレイヤーと同じく6体（前衛3体・後衛3体）を持たせる。CPUの行動性格はランダムに割り当てる。
+  let enemyParty = enemyPool.slice(0, MAX_ROSTER).map((c, i) => {
+    const baseStats = c.stats || { chikara:60, mamori:60, youjutsu:60, subayasa:60 };
+    const baseHp = c.maxHp || 100;
+    const enemyActionSeikakuId = ACTION_PERSONALITIES[Math.floor(Math.random() * ACTION_PERSONALITIES.length)].id;
+    const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, enemyActionSeikakuId);
+    return {
+      id:'e' + i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:0, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null,
+      slackSeikaku: getSlackPersonality(c.slackSeikaku || 'sunao'), actionSeikaku: getActionPersonality(enemyActionSeikakuId)
+    };
+  });
+
+  const partyLayer = document.getElementById('partyLayer');
+  const enemyLayer = document.getElementById('enemyLayer');
+  const commandBar = document.getElementById('commandBar');
+  const stage = document.querySelector('.battle-screen .stage');
+
+  const elements = {};
+  party.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'slot party-member';
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="token ${c.cls}">${c.label}</div>
+      <div class="nameplate">${c.name}</div>
+      <div class="hpbar">
+        <div class="ultgauge">
+          <svg viewBox="0 0 20 24">
+            <clipPath id="ultclip-${c.id}">
+              <rect x="0" y="${24 - (24 * c.ult / 100)}" width="20" height="${24 * c.ult / 100}"></rect>
+            </clipPath>
+            <path class="ult-bg" d="M10 1 C 10 1, 18 12.5, 18 17 C 18 21.5, 14.5 23.5, 10 23.5 C 5.5 23.5, 2 21.5, 2 17 C 2 12.5, 10 1, 10 1 Z"></path>
+            <path class="ult-fill" clip-path="url(#ultclip-${c.id})" d="M10 1 C 10 1, 18 12.5, 18 17 C 18 21.5, 14.5 23.5, 10 23.5 C 5.5 23.5, 2 21.5, 2 17 C 2 12.5, 10 1, 10 1 Z"></path>
+          </svg>
+        </div>
+        <div style="width:${Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100))}%"></div>
+      </div>
+    `;
+    partyLayer.appendChild(el);
+    elements[c.id] = el;
+  });
+
+  const enemyElements = {};
+  enemyParty.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'slot enemy enemy-member';
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="token ${c.cls}">${c.label}</div>
+      <div class="nameplate">${c.name}</div>
+      <div class="hpbar">
+        <div class="ultgauge">
+          <svg viewBox="0 0 20 24">
+            <clipPath id="ultclip-${c.id}">
+              <rect x="0" y="${24 - (24 * c.ult / 100)}" width="20" height="${24 * c.ult / 100}"></rect>
+            </clipPath>
+            <path class="ult-bg" d="M10 1 C 10 1, 18 12.5, 18 17 C 18 21.5, 14.5 23.5, 10 23.5 C 5.5 23.5, 2 21.5, 2 17 C 2 12.5, 10 1, 10 1 Z"></path>
+            <path class="ult-fill" clip-path="url(#ultclip-${c.id})" d="M10 1 C 10 1, 18 12.5, 18 17 C 18 21.5, 14.5 23.5, 10 23.5 C 5.5 23.5, 2 21.5, 2 17 C 2 12.5, 10 1, 10 1 Z"></path>
+          </svg>
+        </div>
+        <div style="width:${Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100))}%"></div>
+      </div>
+    `;
+    enemyLayer.appendChild(el);
+    enemyElements[c.id] = el;
+  });
+
+  // ============================================================
+  // とりつき（バフ・デバフ）倍率テーブル
+  //   バフ  : 味方に対して行う良いとりつき（ステータス上昇）
+  //   デバフ: 敵に対して行う悪いとりつき（ステータス低下）
+  // 「1つのステータスのみ」を上げ下げする場合と「全ステータス同時」に
+  // 上げ下げする場合とで倍率が異なる。
+  // ============================================================
+  const BUFF_RATES = {
+    small:   { single: null,  all: 0.05 },   // 小アップ
+    normal:  { single: 0.10,  all: 0.075 },  // 通常（表記なし）
+    large:   { single: 0.15,  all: 0.15 },   // 大アップ
+    super:   { single: 0.25,  all: null },   // 超アップ
+    ultimate:{ single: 0.50,  all: null },   // 究極アップ（※極一部）
+  };
+  const DEBUFF_RATES = {
+    small:   { single: null,  all: 0.075 },  // 小ダウン
+    normal:  { single: 0.15,  all: 0.10 },   // 通常（表記なし）
+    large:   { single: 0.25,  all: 0.20 },   // 大ダウン
+    super:   { single: 0.40,  all: null },   // 超ダウン
+  };
+
+  // とりつき効果を1つ付与する。
+  //   kind  : 'buff' | 'debuff'
+  //   grade : 'small' | 'normal' | 'large' | 'super' | 'ultimate'
+  //   scope : 'single'（1ステータスのみ） | 'all'（全ステータス同時）
+  //   stat  : scope==='single' のとき対象ステータス名（chikara/mamori/youjutsu/subayasa）
+  //   duration: 効果が続くターン数（自分の行動回数ベース、省略時は3）
+  function applyPossessEffect(target, { kind, grade, scope, stat, duration, name }){
+    const table = kind === 'buff' ? BUFF_RATES : DEBUFF_RATES;
+    const rate = table[grade] ? table[grade][scope] : null;
+    if(rate == null) return null; // その組み合わせは定義されていない
+    if(duration == null) duration = kind === 'buff' ? 5 : 3;
+    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind, grade, scope, stat: scope === 'single' ? stat : null, rate, duration, name };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+
+  // 「挑発」系のとりつき効果を付与する（ステータス変化はなく、常に狙われるようになる）。
+  function applyTauntEffect(target, { duration = 5, name }){
+    if(!target.possessEffects) target.possessEffects = [];
+    const effect = { kind: 'buff', grade: null, scope: null, stat: null, rate: 0, duration, name, taunt: true };
+    target.possessEffects.push(effect);
+    updateAuraEffect(target);
+    return effect;
+  }
+
+  // 対象に「挑発」効果（常に狙われる）がかかっているかどうか
+  function hasTaunt(c){
+    return !!(c.possessEffects && c.possessEffects.some(e => e.taunt));
+  }
+
+  // 通常攻撃・妖術攻撃の対象を選ぶ。挑発中のキャラがいれば必ずそちらが狙われる。
+  function pickAttackTarget(candidates){
+    const alive = candidates.filter(c => c.alive);
+    if(alive.length === 0) return null;
+    const taunting = alive.filter(hasTaunt);
+    const pool = taunting.length > 0 ? taunting : alive;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // 経過処理：キャラが1行動したタイミングで、そのキャラにかかっている
+  // とりつき効果の残りターンを1減らし、0になったものを取り除く。
+  function tickPossessEffects(c){
+    if(!c.possessEffects || c.possessEffects.length === 0) return;
+    // デバフは行動回数で切れず、ずっと持続する。バフのみ残り行動回数を減らして消滅させる。
+    c.possessEffects.forEach(e => { if(e.kind === 'buff') e.duration -= 1; });
+    c.possessEffects = c.possessEffects.filter(e => e.kind !== 'buff' || e.duration > 0);
+    updateAuraEffect(c);
+  }
+
+  // 現在かかっているバフ／デバフの状態に応じて、キャラにオーラのCSSクラスを付け外しする。
+  // バフ＝黄色〜橙色のオーラ、デバフ＝薄暗い紫色のオーラ。両方かかっている場合はデバフのオーラを優先表示する。
+  function updateAuraEffect(c){
+    const el = getCharEl(c);
+    if(!el) return;
+    const effects = c.possessEffects || [];
+    const hasDebuff = effects.some(e => e.kind === 'debuff');
+    const hasBuff = effects.some(e => e.kind === 'buff');
+    el.classList.toggle('aura-debuff', hasDebuff);
+    el.classList.toggle('aura-buff', hasBuff && !hasDebuff);
+  }
+
+  // 「におうだち」等、前衛の真ん中（前2）にいる時だけ発動するスキルの判定。
+  // 前衛3体のうち中央（インデックス1）に自分がいるかどうかを、自分の陣営の配列から調べる。
+  function isInMiddleFrontPosition(c){
+    const arr = c.side === 'enemy' ? enemyParty : party;
+    return arr[1] === c && c.alive;
+  }
+
+  // ベースのステータスに、現在有効なとりつき効果をすべて乗算して実効値を算出する。
+  // 同じステータスに複数の効果がかかっている場合は倍率を積み重ねる（乗算合成）。
+  function getEffectiveStats(c){
+    const base = c.stats;
+    const result = { chikara: base.chikara, mamori: base.mamori, youjutsu: base.youjutsu, subayasa: base.subayasa };
+    // 「におうだち」：前衛の真ん中にいる時だけまもりアップ（通常アップと同じ上げ幅：+10%）
+    if(c.skill && c.skill.middleMamoriBoost && isInMiddleFrontPosition(c)){
+      result.mamori *= 1.10;
+    }
+    if(!c.possessEffects) return result;
+    c.possessEffects.forEach(e => {
+      const sign = e.kind === 'buff' ? 1 : -1;
+      const mult = 1 + sign * e.rate;
+      if(e.scope === 'all'){
+        result.chikara *= mult;
+        result.mamori *= mult;
+        result.youjutsu *= mult;
+        result.subayasa *= mult;
+      } else if(e.stat){
+        result[e.stat] *= mult;
+      }
+    });
+    return result;
+  }
+
+  // ============================================================
+  // ステータスに基づく戦闘計算
+  //   ちから   : 物理攻撃の威力
+  //   ようじゅつ: 妖術攻撃の威力
+  //   まもり   : 受けるダメージの軽減
+  //   すばやさ : 行動順の速さ、および攻撃の回避しやすさ
+  // ============================================================
+
+  // 物理攻撃ダメージ = ちから/2 - (対象のまもり)/4 + 技の威力/2　(±10%のランダムなブレ)
+  function calcPhysicalDamage(attacker, defender, power){
+    const atkStats = getEffectiveStats(attacker);
+    const defStats = getEffectiveStats(defender);
+    const base = atkStats.chikara / 2 - defStats.mamori / 4 + power / 2;
+    const variance = 1 + (Math.random() * 0.2 - 0.1); // ±10%
+    return Math.max(1, Math.round(base * variance));
+  }
+
+  // 妖術攻撃ダメージ = ようじゅつ/2 - (対象のまもり)/4 + 技の威力/2　(±10%のランダムなブレ)
+  function calcMagicDamage(attacker, defender, power){
+    const atkStats = getEffectiveStats(attacker);
+    const defStats = getEffectiveStats(defender);
+    const base = atkStats.youjutsu / 2 - defStats.mamori / 4 + power / 2;
+    const variance = 1 + (Math.random() * 0.2 - 0.1); // ±10%
+    return Math.max(1, Math.round(base * variance));
+  }
+
+  // 「すばやさ」が高いほど攻撃を回避しやすい。
+  // 防御側のすばやさが攻撃側より高いほど回避率が上がる（両者の差で判定する）。
+  // kind が 'magic' で、防御側が妖術回避系スキルを持つ場合はさらに回避率を上乗せする。
+  function calcEvasionChance(attacker, defender, kind){
+    const atkStats = getEffectiveStats(attacker);
+    const defStats = getEffectiveStats(defender);
+    const diff = defStats.subayasa - atkStats.subayasa;
+    // 差が大きいほど回避率が上がる。差0（同速）のときは基礎回避率10%。
+    let chance = 0.1 + diff / 300;
+    const magicEvasionBonus = defender.skill && defender.skill.magicEvasionBonus;
+    if(kind === 'magic' && magicEvasionBonus){
+      chance += magicEvasionBonus;
+      return Math.max(0.02, Math.min(0.9, chance));
+    }
+    return Math.max(0.02, Math.min(0.6, chance));
+  }
+
+  // 属性の一覧（このゲームでは以下の7属性を扱う）
+  const ELEMENTS = ['火', '水', '雷', '土', '氷', '風', '吸収'];
+
+  // 属性相性：攻撃属性が対象の「得意」属性と一致するとダメージ0.5倍、
+  // 「弱点」属性と一致すると1.8倍になる。属性が無い攻撃や、
+  // どちらにも該当しない場合は等倍（1.0倍）のまま。
+  const ATTR_RESIST_MULTIPLIER = 0.5;
+  const ATTR_WEAK_MULTIPLIER = 1.8;
+  function calcAttributeMultiplier(defender, element){
+    if(!element) return { multiplier:1, kind:'none' };
+    if(defender.tokui && defender.tokui === element) return { multiplier:ATTR_RESIST_MULTIPLIER, kind:'resist' };
+    if(defender.jaku && defender.jaku === element) return { multiplier:ATTR_WEAK_MULTIPLIER, kind:'weak' };
+    return { multiplier:1, kind:'none' };
+  }
+
+  // クリティカル：通常は5%の確率で1.5倍のダメージ。
+  // 「超クリティカル」スキルを持つキャラは、いりょく（倍率）がそのスキルの値に置き換わる。
+  const CRIT_CHANCE = 0.05;
+  const CRIT_MULTIPLIER_DEFAULT = 1.5;
+  function rollCritical(attacker){
+    if(Math.random() >= CRIT_CHANCE) return { critical:false, multiplier:1 };
+    const multiplier = (attacker.skill && attacker.skill.critMultiplier) || CRIT_MULTIPLIER_DEFAULT;
+    return { critical:true, multiplier };
+  }
+
+  // 攻撃を実際に解決する（回避判定 → 命中していればダメージ計算 → 属性相性 → クリティカル判定）
+  // kind: 'physical' | 'magic'　　power: 使用する技の威力　　element: 攻撃の属性（無ければ null/undefined）
+  function resolveAttack(attacker, defender, kind, power, element){
+    const alwaysHit = attacker.skill && attacker.skill.alwaysHit;
+    if(!alwaysHit && Math.random() < calcEvasionChance(attacker, defender, kind)){
+      return { hit:false, damage:0, critical:false };
+    }
+    let damage = kind === 'magic'
+      ? calcMagicDamage(attacker, defender, power)
+      : calcPhysicalDamage(attacker, defender, power);
+    const attr = calcAttributeMultiplier(defender, element);
+    if(attr.multiplier !== 1){
+      damage = Math.max(1, Math.round(damage * attr.multiplier));
+    }
+    const crit = rollCritical(attacker);
+    if(crit.critical){
+      damage = Math.round(damage * crit.multiplier);
+    }
+    return { hit:true, damage, critical:crit.critical, critMultiplier:crit.multiplier, attrKind:attr.kind };
+  }
+
+  // 1回の行動で複数回攻撃する技（例：ブシニャンの「閃光ぎり」3回攻撃）の処理。
+  // ヒットごとに毎回独立で回避判定・クリティカル判定・属性判定を行う。
+  // 対象が途中で倒れた場合は、そこで残りの攻撃を打ち切る。
+  const ATTACK_KIND_LABEL = { physical:'物理攻撃', magic:'妖術攻撃' };
+  function performMultiHitAttack(actor, target, kind, power, element, hits, label){
+    const actionLabel = label || ATTACK_KIND_LABEL[kind] || '攻撃';
+    let totalDamage = 0;
+    let hitCount = 0;
+    let anyCritical = false;
+    for(let i = 0; i < hits; i++){
+      if(!target.alive) break;
+      const result = resolveAttack(actor, target, kind, power, element);
+      if(!result.hit){
+        logLine(`${actor.name} の${actionLabel}！(${i+1}/${hits}発目) → ${target.name} はかわした！`, 'miss');
+        continue;
+      }
+      const dmg = applyDamageTo(target, result.damage);
+      totalDamage += dmg;
+      hitCount++;
+      if(result.critical) anyCritical = true;
+      const critTag = result.critical ? `【クリティカル！×${result.critMultiplier}】` : '';
+      const attrTag = result.attrKind === 'weak' ? '【弱点！】' : (result.attrKind === 'resist' ? '【耐性】' : '');
+      if(result.critical) showActionBubble(actor, `クリティカル！`);
+      const hitTag = hits > 1 ? `(${i+1}/${hits}発目) ` : '';
+      logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${target.guarding ? '（ガード中）' : ''}`, result.critical ? 'critical' : undefined);
+    }
+    if(hits > 1 && hitCount > 0){
+      logLine(`${actor.name} の${actionLabel}は合計 ${totalDamage} ダメージ！（${hitCount}/${hits}発命中）`, anyCritical ? 'critical' : undefined);
+    }
+  }
+
+  // 「すばやさ」が高いキャラほど先に行動する。同値の場合はランダムで順番を決める。
+  function getTurnOrder(characters){
+    return characters
+      .map(c => ({ c, r: Math.random() }))
+      .sort((a, b) => (getEffectiveStats(b.c).subayasa - getEffectiveStats(a.c).subayasa) || (a.r - b.r))
+      .map(x => x.c);
+  }
+  function getCharEl(c){
+    return c.side === 'enemy' ? enemyElements[c.id] : elements[c.id];
+  }
+
+  function updateUltGauge(c){
+    const el = getCharEl(c);
+    if(!el) return;
+    const rect = el.querySelector(`#ultclip-${c.id} rect`);
+    if(rect){
+      rect.setAttribute('y', 24 - (24 * c.ult / 100));
+      rect.setAttribute('height', 24 * c.ult / 100);
+    }
+  }
+
+  // 必殺技メーターは最初は空(0)から始まり、「行動」のたびに少しずつ溜まっていく。
+  // ランクごとに満タンになるまでの行動回数が異なる。
+  // S:25行動 / A:23行動 / B:20行動 / C:15行動 / D:12行動 / E:10行動
+  const ULT_MAX = 100;
+  const RANK_ACTIONS_TO_FULL = {
+    S: 25, A: 23, B: 20, C: 15, D: 12, E: 10
+  };
+  function ultGainPerAction(rank){
+    const actions = RANK_ACTIONS_TO_FULL[rank] || RANK_ACTIONS_TO_FULL.C;
+    return ULT_MAX / actions;
+  }
+
+  // キャラクター(味方・敵を問わず)が1行動したときに呼ぶ。
+  // 必殺技ゲージがまだ満タンでなければ、そのキャラのランクに応じた量だけ溜める。
+  function gainUltOnAction(c){
+    if(c.ult >= ULT_MAX) return;
+    c.ult = Math.min(ULT_MAX, c.ult + ultGainPerAction(c.rank));
+    updateUltGauge(c);
+  }
+
+  const frontPositions = [
+    { top:'70%', left:'25%' },
+    { top:'70%', left:'50%' },
+    { top:'70%', left:'75%' },
+  ];
+
+  function reservePositionPx(i){
+    const rect = commandBar.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const spacing = 60;
+    const cx = rect.left - stageRect.left + rect.width/2;
+    const cy = rect.top - stageRect.top + rect.height/2;
+    const x = cx + (i - 1) * spacing;
+    return { top: cy + 'px', left: x + 'px' };
+  }
+
+  function applyPosition(el, pos){
+    el.style.top = pos.top;
+    el.style.left = pos.left;
+  }
+
+  function render(){
+    for(let i=0;i<3;i++){
+      const el = elements[party[i].id];
+      el.classList.remove('state-reserve');
+      el.classList.add('state-front');
+      applyPosition(el, frontPositions[i]);
+    }
+    for(let i=0;i<3;i++){
+      const el = elements[party[i+3].id];
+      el.classList.remove('state-front');
+      el.classList.add('state-reserve');
+      applyPosition(el, reservePositionPx(i));
+    }
+  }
+  render();
+  window.addEventListener('resize', render);
+  requestAnimationFrame(render);
+
+  // ---- CPU（敵）側の前衛/後衛レイアウト ----
+  // 敵の前衛は画面奥の3箇所。後衛はさらに奥（上）に控えさせる。
+  const enemyFrontPositions = [
+    { top:'26%', left:'25%' },
+    { top:'26%', left:'50%' },
+    { top:'26%', left:'75%' },
+  ];
+  const enemyReservePositions = [
+    { top:'8%', left:'35%' },
+    { top:'8%', left:'50%' },
+    { top:'8%', left:'65%' },
+  ];
+
+  function renderEnemy(){
+    for(let i=0;i<3;i++){
+      const el = enemyElements[enemyParty[i].id];
+      el.classList.remove('state-reserve');
+      el.classList.add('state-front');
+      applyPosition(el, enemyFrontPositions[i]);
+    }
+    for(let i=0;i<3;i++){
+      const el = enemyElements[enemyParty[i+3].id];
+      el.classList.remove('state-front');
+      el.classList.add('state-reserve');
+      applyPosition(el, enemyReservePositions[i]);
+    }
+  }
+  renderEnemy();
+  window.addEventListener('resize', renderEnemy);
+  requestAnimationFrame(renderEnemy);
+
+  // CPU側も味方と同じ周回順（前衛左→中央→右→後衛右→中央→左→…）でサークルを回す
+  const ENEMY_LOOP_ORDER = [0, 1, 2, 5, 4, 3];
+
+  function rotateEnemyParty(dir){
+    const ring = ENEMY_LOOP_ORDER.map(idx => enemyParty[idx]);
+    if(dir > 0){
+      const last = ring.pop();
+      ring.unshift(last);
+    } else {
+      const first = ring.shift();
+      ring.push(first);
+    }
+    ENEMY_LOOP_ORDER.forEach((idx, i) => { enemyParty[idx] = ring[i]; });
+    renderEnemy();
+  }
+
+  // 敵の前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を丸ごと入れ替える。
+  // 回転中・クールタイム中であっても、全滅は最優先で即座に反映する。
+  function forceSwapEnemyIfFrontWiped(){
+    const frontAlive = enemyParty.slice(0, 3).some(c => c.alive);
+    const reserveAlive = enemyParty.slice(3, 6).some(c => c.alive);
+    if(frontAlive || !reserveAlive) return;
+
+    enemyClearTimer();
+    enemyPhase = 'idle';
+
+    const front = enemyParty.slice(0, 3);
+    const reserve = enemyParty.slice(3, 6);
+    enemyParty = [...reserve, ...front];
+    renderEnemy();
+    logLine('てき軍の前衛が全滅！ 後衛と入れ替わった！', 'dead');
+  }
+
+  // CPUのフェーズ管理（プレイヤーのドラッグ操作に相当する自動判断版）
+  //   'idle'     : いつでも回転を判断できる状態
+  //   'rotating' : 回転を実行している最短の演出時間
+  //   'cooldown' : 回転後、次に回すまでのクールタイム（プレイヤー側と同じ長さ）
+  let enemyPhase = 'idle';
+  let enemyPhaseTimerId = null;
+
+  function enemyClearTimer(){
+    if(enemyPhaseTimerId){ clearTimeout(enemyPhaseTimerId); enemyPhaseTimerId = null; }
+  }
+
+  function enemyRotateSteps(steps){
+    enemyClearTimer();
+    enemyPhase = 'rotating';
+
+    let remaining = steps;
+    const stepOnce = () => {
+      if(remaining <= 0){
+        logLine('てき軍は前衛を入れ替えた。');
+        enemyPhase = 'cooldown';
+        enemyPhaseTimerId = setTimeout(() => { enemyPhase = 'idle'; }, COOLDOWN_MS);
+        return;
+      }
+      rotateEnemyParty(1);
+      remaining--;
+      enemyPhaseTimerId = setTimeout(stepOnce, 260);
+    };
+    stepOnce();
+  }
+
+  // 輪の周回順：前衛左(0) → 前衛中央(1) → 前衛右(2)
+  //   → 後衛右(5) → 後衛中央(4) → 後衛左(3) → 前衛左(0) …
+  const LOOP_ORDER = [0, 1, 2, 5, 4, 3];
+
+  const timerRing = document.getElementById('timerRing');
+  const timerRingFg = document.getElementById('timerRingFg');
+  const timerCountdown = document.getElementById('timerCountdown');
+  const cooldownLabel = document.getElementById('cooldownLabel');
+
+  const DRAG_LIMIT_MS = 4000;   // ドラッグできる制限時間
+  const COOLDOWN_MS   = 7000;   // 次に回せるようになるまでのクールタイム
+  const RING_CIRCUMFERENCE = 276.5; // r=44 の円周（2*PI*44 ≈ 276.46）
+
+  let startX = 0;
+  let dragging = false;
+  const THRESHOLD = 50;
+
+  let phase = 'idle'; // 'idle' | 'dragging' | 'cooldown'
+  let phaseTimerId = null;   // setTimeout: フェーズ終了
+  let phaseRafId = null;     // requestAnimationFrame: リング/カウントダウン更新
+  let phaseStart = 0;
+  let phaseDuration = 0;
+
+  function setRingProgress(remainingRatio){
+    // remainingRatio: 1 = 満タン(残り時間いっぱい), 0 = 空
+    const offset = RING_CIRCUMFERENCE * (1 - remainingRatio);
+    timerRingFg.style.strokeDashoffset = offset;
+  }
+
+  function updatePhaseVisual(){
+    const elapsed = performance.now() - phaseStart;
+    const remaining = Math.max(0, phaseDuration - elapsed);
+    const remainingRatio = remaining / phaseDuration;
+    setRingProgress(remainingRatio);
+
+    const remainingSec = Math.ceil(remaining / 1000);
+    const showCountdown = remaining <= 3000 && remaining > 0;
+
+    if(phase === 'dragging'){
+      timerRingFg.classList.toggle('urgent', remaining <= 1000);
+      timerRingFg.classList.remove('cooldown');
+      timerCountdown.classList.toggle('visible', showCountdown);
+      timerCountdown.classList.toggle('urgent', remaining <= 1000);
+      timerCountdown.textContent = showCountdown ? remainingSec : '';
+    } else if(phase === 'cooldown'){
+      timerRingFg.classList.add('cooldown');
+      timerRingFg.classList.remove('urgent');
+      timerCountdown.classList.toggle('visible', showCountdown);
+      timerCountdown.classList.remove('urgent');
+      timerCountdown.textContent = showCountdown ? remainingSec : '';
+    }
+
+    if(remaining > 0 && phase !== 'idle'){
+      phaseRafId = requestAnimationFrame(updatePhaseVisual);
+    }
+  }
+
+  function clearPhaseTimers(){
+    if(phaseTimerId){ clearTimeout(phaseTimerId); phaseTimerId = null; }
+    if(phaseRafId){ cancelAnimationFrame(phaseRafId); phaseRafId = null; }
+  }
+
+  function enterDraggingPhase(){
+    clearPhaseTimers();
+    phase = 'dragging';
+    phaseStart = performance.now();
+    phaseDuration = DRAG_LIMIT_MS;
+
+    commandBar.classList.add('dragging');
+    commandBar.classList.remove('locked');
+    timerRing.classList.add('visible');
+    cooldownLabel.classList.remove('visible');
+    setRingProgress(1);
+    timerRingFg.classList.remove('cooldown');
+
+    updatePhaseVisual();
+    phaseTimerId = setTimeout(forceLockAndStartCooldown, DRAG_LIMIT_MS);
+  }
+
+  function forceLockAndStartCooldown(){
+    // 4秒経過：その時点のメンバー編成で強制固定してドラッグ終了
+    dragging = false;
+    commandBar.classList.remove('dragging');
+    enterCooldownPhase();
+  }
+
+  function enterCooldownPhase(){
+    clearPhaseTimers();
+    phase = 'cooldown';
+    phaseStart = performance.now();
+    phaseDuration = COOLDOWN_MS;
+
+    commandBar.classList.add('locked');
+    timerRing.classList.add('visible');
+    timerRingFg.classList.add('cooldown');
+    cooldownLabel.classList.add('visible');
+    setRingProgress(1);
+
+    // 隊列が固定された = 前衛3体がそれぞれ1行動したとみなし、必殺技ゲージを溜める
+    for(let i=0;i<3;i++){ gainUltOnAction(party[i]); }
+
+    updatePhaseVisual();
+    phaseTimerId = setTimeout(endCooldown, COOLDOWN_MS);
+  }
+
+  function endCooldown(){
+    clearPhaseTimers();
+    phase = 'idle';
+    commandBar.classList.remove('locked');
+    timerRing.classList.remove('visible');
+    timerCountdown.classList.remove('visible');
+    cooldownLabel.classList.remove('visible');
+    setRingProgress(0);
+  }
+
+  function rotateParty(dir){
+    const ring = LOOP_ORDER.map(idx => party[idx]);
+    if(dir > 0){
+      const last = ring.pop();
+      ring.unshift(last);
+    } else {
+      const first = ring.shift();
+      ring.push(first);
+    }
+    LOOP_ORDER.forEach((idx, i) => { party[idx] = ring[i]; });
+    render();
+  }
+
+  // 前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を丸ごと入れ替える。
+  // ドラッグ操作中・クールタイム中であっても、全滅は最優先で即座に反映する。
+  function forceSwapIfFrontWiped(){
+    const frontAlive = party.slice(0, 3).some(c => c.alive);
+    const reserveAlive = party.slice(3, 6).some(c => c.alive);
+    if(frontAlive || !reserveAlive) return;
+
+    // 進行中の操作があれば中断し、前衛と後衛をそのまま入れ替える
+    clearPhaseTimers();
+    dragging = false;
+    phase = 'idle';
+    commandBar.classList.remove('dragging', 'locked');
+    timerRing.classList.remove('visible');
+    timerCountdown.classList.remove('visible');
+    cooldownLabel.classList.remove('visible');
+
+    const front = party.slice(0, 3);
+    const reserve = party.slice(3, 6);
+    party = [...reserve, ...front];
+    render();
+    logLine('前衛が全滅！ 後衛と入れ替わった！', 'dead');
+  }
+
+  function pointerDown(e){
+    if(phase === 'cooldown') return; // クールタイム中は操作不可
+    dragging = true;
+    startX = (e.touches ? e.touches[0].clientX : e.clientX);
+    if(phase !== 'dragging') enterDraggingPhase();
+  }
+  function pointerMove(e){
+    if(!dragging || phase !== 'dragging') return;
+    const x = (e.touches ? e.touches[0].clientX : e.clientX);
+    const dx = x - startX;
+    if(Math.abs(dx) > THRESHOLD){
+      rotateParty(dx < 0 ? 1 : -1);
+      startX = x;
+    }
+  }
+  function pointerUp(){
+    if(!dragging) return;
+    dragging = false;
+    if(phase === 'dragging'){
+      // ユーザーが自分で指を離した場合も、そこでサークルは固定され、
+      // 引き続きクールタイムに入る（4秒経過を待たずに固定 → クールタイム開始）
+      commandBar.classList.remove('dragging');
+      enterCooldownPhase();
+    }
+  }
+
+  commandBar.addEventListener('mousedown', pointerDown);
+  window.addEventListener('mousemove', pointerMove);
+  window.addEventListener('mouseup', pointerUp);
+
+  commandBar.addEventListener('touchstart', pointerDown, {passive:true});
+  window.addEventListener('touchmove', pointerMove, {passive:true});
+  window.addEventListener('touchend', pointerUp);
+
+  // ============================================================
+  // 自動戦闘ループ
+  //   前衛にいる味方・敵キャラのすばやさ順に、自動で行動する。
+  //   行動パターン：物理攻撃・妖術攻撃・ガード・取り憑き・サボり（ランダム選択）
+  //   ガード中は、次に自分の番が回ってくるまで被ダメージを約50%カットする。
+  //   攻撃対象の上には三角矢印（▼）を表示する。
+  //   CPU側も6体編成で、状況に応じて自動でサークルを回し前衛を入れ替える。
+  // ============================================================
+  const BASIC_ATTACK_POWER = 20;
+  const TURN_INTERVAL_MS = 1600; // 1体の行動が終わってから次の行動までの間隔
+
+  party.forEach(c => { c.side = 'ally'; c.alive = true; c.guarding = false; });
+  enemyParty.forEach(c => { c.side = 'enemy'; c.alive = true; c.guarding = false; });
+
+  const battleLogEl = document.getElementById('battleLog');
+  function logLine(text, cls){
+    const line = document.createElement('div');
+    line.className = 'log-line' + (cls ? ' ' + cls : '');
+    line.textContent = text;
+    battleLogEl.prepend(line);
+    while(battleLogEl.children.length > 30) battleLogEl.removeChild(battleLogEl.lastChild);
+  }
+
+  function updateHpBar(c){
+    const el = getCharEl(c);
+    if(!el) return;
+    const bar = el.querySelector('.hpbar > div:last-child') || el.querySelector('.hpbar > div');
+    if(bar) bar.style.width = Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100)) + '%';
+    el.classList.toggle('dead', !c.alive);
+  }
+
+  // 現在「前衛」にいる生存キャラ（味方・敵ともに、それぞれの隊列の先頭3体が前衛）
+  function getFrontRowCombatants(){
+    const allyFront = party.slice(0, 3).filter(c => c.alive);
+    const enemyFront = enemyParty.slice(0, 3).filter(c => c.alive);
+    return [...allyFront, ...enemyFront];
+  }
+
+  // ---- ターゲット矢印 ----
+  let targetArrowEl = null;
+  function showTargetArrow(targetChar){
+    hideTargetArrow();
+    const el = getCharEl(targetChar);
+    if(!el) return;
+    const arrow = document.createElement('div');
+    arrow.className = 'target-arrow';
+    arrow.textContent = '▼';
+    el.appendChild(arrow);
+    targetArrowEl = arrow;
+  }
+  function hideTargetArrow(){
+    if(targetArrowEl && targetArrowEl.parentNode){
+      targetArrowEl.parentNode.removeChild(targetArrowEl);
+    }
+    targetArrowEl = null;
+  }
+
+  // ---- 行動種類の吹き出し（物理攻撃以外の行動時にキャラクターの上に表示） ----
+  const ACTION_LABELS = {
+    magic: '妖術攻撃！',
+    guard: 'ガード！',
+    possess: '取り憑き！',
+    slack: 'サボり…'
+  };
+  function showActionBubble(actor, label){
+    const el = getCharEl(actor);
+    if(!el) return;
+    const old = el.querySelector('.action-bubble');
+    if(old) old.remove();
+    const bubble = document.createElement('div');
+    bubble.className = 'action-bubble';
+    bubble.textContent = label;
+    el.appendChild(bubble);
+    setTimeout(() => { if(bubble.parentNode) bubble.parentNode.removeChild(bubble); }, 1600);
+  }
+
+  // ---- ダメージ適用（ガード中は約50%カット） ----
+  function applyDamageTo(defender, rawDamage){
+    const finalDamage = defender.guarding ? Math.round(rawDamage * 0.5) : rawDamage;
+    defender.hp = Math.max(0, defender.hp - finalDamage);
+    updateHpBar(defender);
+    if(defender.hp <= 0 && defender.alive){
+      defender.alive = false;
+      updateHpBar(defender);
+      logLine(`${defender.name} を倒した！`, 'dead');
+    }
+    // 前衛が全滅した側があれば、その場で強制的に前衛と後衛を入れ替える
+    forceSwapIfFrontWiped();
+    forceSwapEnemyIfFrontWiped();
+    return finalDamage;
+  }
+
+  function pickRandomTarget(candidates){
+    const alive = candidates.filter(c => c.alive);
+    if(alive.length === 0) return null;
+    return alive[Math.floor(Math.random() * alive.length)];
+  }
+
+  // ---- 行動パターン ----
+  const ACTIONS = ['physical', 'magic', 'guard', 'possess', 'slack'];
+
+  // サボりやすさ性格＋行動性格の重みに基づいて、このターンの行動を1つ選ぶ
+  function chooseAction(actor){
+    const slackRate = (actor.slackSeikaku && actor.slackSeikaku.rate) || 0;
+    if(Math.random() < slackRate) return 'slack';
+
+    const rateTable = buildActionRateTable(actor);
+    const entries = Object.entries(rateTable);
+    const total = entries.reduce((sum, [, w]) => sum + w, 0);
+    let roll = Math.random() * total;
+    for(const [action, w] of entries){
+      roll -= w;
+      if(roll < 0) return action;
+    }
+    return entries[entries.length - 1][0];
+  }
+
+  function performAction(actor){
+    if(!actor.alive) return;
+
+    // 自分の番が来た時点でガード状態は解除（「次に番が回ってくるまで」ガードするため）
+    actor.guarding = false;
+    // 自分にかかっているとりつき効果の残りターンを消化
+    tickPossessEffects(actor);
+
+    const opponents = actor.side === 'ally' ? getFrontRowCombatants().filter(c => c.side === 'enemy') : getFrontRowCombatants().filter(c => c.side === 'ally');
+    const action = chooseAction(actor);
+
+    if((action === 'physical' || action === 'magic') && opponents.length === 0){
+      // 攻撃対象がいなければサボりに切り替え
+      logLine(`${actor.name} は行動できず立ち尽くした…`);
+      return;
+    }
+
+    switch(action){
+      case 'physical': {
+        const target = pickAttackTarget(opponents);
+        showTargetArrow(target);
+        const physicalElement = actor.physicalSkill && actor.physicalSkill.element;
+        const hits = (actor.physicalSkill && actor.physicalSkill.hits) || 1;
+        performMultiHitAttack(actor, target, 'physical', BASIC_ATTACK_POWER, physicalElement, hits, '物理攻撃');
+        break;
+      }
+      case 'magic': {
+        showActionBubble(actor, ACTION_LABELS.magic);
+        const target = pickAttackTarget(opponents);
+        showTargetArrow(target);
+        const magicElement = actor.magicSkill && actor.magicSkill.element;
+        const hits = (actor.magicSkill && actor.magicSkill.hits) || 1;
+        performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃');
+        break;
+      }
+      case 'guard': {
+        actor.guarding = true;
+        showActionBubble(actor, ACTION_LABELS.guard);
+        logLine(`${actor.name} はガードの構えを取った。`);
+        break;
+      }
+      case 'possess': {
+        showActionBubble(actor, ACTION_LABELS.possess);
+        // 味方への「とりつき」はバフ、敵への「とりつき」はデバフとして扱う。
+        // 対象は自分の側（バフ）または相手の側（デバフ）の前衛からランダムに選ぶ。
+        const allies = actor.side === 'ally' ? getFrontRowCombatants().filter(c => c.side === 'ally') : getFrontRowCombatants().filter(c => c.side === 'enemy');
+        const foes = opponents;
+        const possessBias = (actor.actionSeikaku && actor.actionSeikaku.possessBias != null) ? actor.actionSeikaku.possessBias : 0.5;
+        const doBuff = Math.random() < possessBias && allies.length > 0;
+        const pool = doBuff ? allies : (foes.length ? foes : allies);
+        const target = pickRandomTarget(pool);
+        if(target){
+          showTargetArrow(target);
+          const kind = doBuff ? 'buff' : 'debuff';
+          // キャラ固有のとりつき技があればそれを使い、無ければ標準的な効果からランダムに選ぶ。
+          const preset = actor.possessSkill;
+          if(preset && preset.kind === kind && preset.taunt){
+            // 「挑発」系のとりつき：ステータス変化はなく、対象が常に狙われるようになる
+            const effect = applyTauntEffect(target, { duration: 5, name: preset.name });
+            logLine(`${actor.name} の${preset.name}！ → ${target.name} は常に敵から狙われるようになった！`);
+            break;
+          }
+          let grade, scope, stat, name;
+          if(preset && preset.kind === kind){
+            grade = preset.grade; scope = preset.scope; stat = preset.stat; name = preset.name;
+          } else {
+            grade = 'normal';
+            scope = Math.random() < 0.5 ? 'all' : 'single';
+            stat = ['chikara','mamori','youjutsu','subayasa'][Math.floor(Math.random()*4)];
+            name = kind === 'buff' ? '通常アップ' : '通常ダウン';
+          }
+          const effect = applyPossessEffect(target, { kind, grade, scope, stat, duration: kind === 'buff' ? 5 : 3, name });
+          if(effect){
+            const gradeLabel = { small:'小', normal:'', large:'大', super:'超', ultimate:'究極' }[grade];
+            const dirLabel = kind === 'buff' ? 'アップ' : 'ダウン';
+            const statLabel = { chikara:'ちから', mamori:'まもり', youjutsu:'ようじゅつ', subayasa:'すばやさ' }[stat];
+            const scopeLabel = scope === 'all' ? '全ステータス' : statLabel;
+            logLine(`${actor.name} の${name}！ → ${target.name} の${scopeLabel}が${gradeLabel}${dirLabel}（約${Math.round(effect.rate*1000)/10}%）！`);
+          } else {
+            logLine(`${actor.name} は${target.name}に取り憑いた…！`);
+          }
+        } else {
+          logLine(`${actor.name} は取り憑く相手がおらず不発に終わった…`);
+        }
+        break;
+      }
+      case 'slack': {
+        showActionBubble(actor, ACTION_LABELS.slack);
+        logLine(`${actor.name} はサボった。`);
+        break;
+      }
+    }
+
+    // 攻撃・ガード・取り憑き・サボりを問わず、行動したことに変わりはないので必殺技ゲージを溜める
+    gainUltOnAction(actor);
+  }
+
+  // ============================================================
+  // CPU側のサークル操作（前衛/後衛の入れ替え）
+  //   プレイヤーの「輪をドラッグして回す」操作をCPUが自動で行う。
+  //   状況（前衛の残りHPやピンチ度合い）を見て、入れ替えるかどうか・
+  //   何回転させるかを判断する。
+  // ============================================================
+  function evaluateEnemyFrontRowDanger(){
+    // 前衛3体（生存者のみ）の残りHP割合の平均が低いほど「危険」と判断する
+    const front = enemyParty.slice(0, 3).filter(c => c.alive);
+    if(front.length === 0) return 0;
+    const avgHpRatio = front.reduce((sum, c) => sum + c.hp / c.maxHp, 0) / front.length;
+    return 1 - avgHpRatio; // 0=安全, 1=全員瀕死
+  }
+
+  function cpuMaybeRotate(){
+    if(battleOver) return;
+    if(enemyPhase !== 'idle') return; // すでに回転中/クールタイム中なら何もしない
+
+    const danger = evaluateEnemyFrontRowDanger();
+    const frontAlive = enemyParty.slice(0, 3).filter(c => c.alive).length;
+    const reserveAlive = enemyParty.slice(3, 6).filter(c => c.alive).length;
+
+    // 前衛に生存者がいない、または前衛が十分危険で、交代できる後衛がいる場合に輪を回す
+    const shouldRotate = reserveAlive > 0 && (frontAlive === 0 || danger > 0.55 || Math.random() < 0.12);
+    if(!shouldRotate) return;
+
+    // 危険度が高いほど、多めに回して後衛を前に出す（1〜3回転）
+    const steps = frontAlive === 0 ? 3 : (danger > 0.75 ? 2 : 1);
+    enemyRotateSteps(steps);
+  }
+
+  // ---- ターン進行 ----
+  let battleLoopTimerId = null;
+  let battleOver = false;
+
+  function checkBattleEnd(){
+    const alliesAlive = party.some(c => c.alive);
+    const enemiesAlive = enemyParty.some(c => c.alive);
+    if(!alliesAlive || !enemiesAlive){
+      battleOver = true;
+      logLine(!alliesAlive ? '味方は全滅した…' : '敵を全滅させた！', 'dead');
+      return true;
+    }
+    return false;
+  }
+
+  let turnQueue = [];
+
+  function processTurnQueue(){
+    if(battleOver) return;
+    hideTargetArrow();
+
+    if(checkBattleEnd()) return;
+
+    // キューが空になったら、次のラウンドの行動順を新たに作り直す
+    if(turnQueue.length === 0){
+      cpuMaybeRotate();
+      turnQueue = getTurnOrder(getFrontRowCombatants());
+      // 前衛に誰もいない等で組めない場合は、少し待って再チェックする
+      if(turnQueue.length === 0){
+        battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+        return;
+      }
+    }
+
+    const actor = turnQueue.shift();
+    // ラウンド開始時に前衛にいても、途中で倒れていたり、
+    // 前衛全滅による強制入れ替えで後衛に下がっていたりしたら行動をスキップして次へ
+    const stillInFront = (actor.side === 'ally' ? party : enemyParty).slice(0, 3).includes(actor);
+    if(!actor.alive || !stillInFront){
+      battleLoopTimerId = setTimeout(processTurnQueue, 0);
+      return;
+    }
+
+    performAction(actor);
+
+    if(checkBattleEnd()) return;
+    battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+  }
+
+  logLine('自動戦闘を開始します。前衛キャラがすばやさ順に行動します。');
+  battleLoopTimerId = setTimeout(processTurnQueue, TURN_INTERVAL_MS);
+}
+</script>
+</body>
+</html>
