@@ -849,6 +849,7 @@
   .battle-screen .battle-log .log-line.miss{ color:#9fd2ff; }
   .battle-screen .battle-log .log-line.dead{ color:#ff9d9d; font-weight:700; }
   .battle-screen .battle-log .log-line.critical{ color:#ffd54a; font-weight:700; }
+  .battle-screen .battle-log .log-line.heal{ color:#8fe3a0; font-weight:700; }
 
   .battle-screen .enemy{ cursor:pointer; }
   .battle-screen .enemy.dead{ cursor:not-allowed; }
@@ -1197,7 +1198,15 @@ const characterPool = [
     possess:{ name:'ネタバレさせる', desc:'常に敵から狙われる', kind:'buff', taunt:true },
     ult:{ name:'ネタバレフィナーレ', power:0, target:'self', heal:'full', buffAll:true, desc:'HPを全回復しつつ全ステータスアップ' }
   },
-  { id:'p5', cls:'c-red',    label:'E', name:'じぶんキャラ5', rank:'E', slackSeikaku:'sunao', stats:{ chikara:60, mamori:40, youjutsu:35, subayasa:90 } },
+  { id:'p5', cls:'c-red', label:'E', name:'花さか爺', rank:'S', no:326, zoku:'ポカポカ族', maxHp:250, slackSeikaku:'sunao',
+    stats:{ chikara:93, mamori:104, youjutsu:164, subayasa:154 },
+    skill:{ name:'おせわ', desc:'となりにいるキャラのHPを少しずつ回復する(1行動で最大HPの2％ずつ回復させる)', neighborHeal:true, neighborHealRate:0.02 },
+    tokui:'土', jaku:'風',
+    physical:{ name:'ずつき', power:15 },
+    magic:{ name:'極楽の術', power:80, element:'回復' },
+    possess:{ name:'奇跡の桜', desc:'すばやさ大アップ', kind:'buff', grade:'large', scope:'single', stat:'subayasa' },
+    ult:{ name:'満開サクラサク', power:0, target:'ally-front', revive:true, healAll:true, desc:'気絶している前衛を復活させて前衛全体のHPを回復させる(回復量=ようじゅつ/2+125±10%)' }
+  },
   { id:'p6', cls:'c-green',  label:'F', name:'じぶんキャラ6', rank:'S', slackSeikaku:'sunao', stats:{ chikara:72, mamori:75, youjutsu:85, subayasa:66 } },
   { id:'p7', cls:'c-teal',   label:'G', name:'じぶんキャラ7', rank:'B', slackSeikaku:'sunao', stats:{ chikara:55, mamori:50, youjutsu:80, subayasa:95 } },
   { id:'p8', cls:'c-pink',   label:'H', name:'じぶんキャラ8', rank:'C', slackSeikaku:'sunao', stats:{ chikara:68, mamori:60, youjutsu:74, subayasa:74 } },
@@ -1537,6 +1546,14 @@ function startBattleField(){
     return Math.max(1, Math.round(base * variance));
   }
 
+  // 回復系の妖術による回復量 = ようじゅつ/2 + 技の威力/2　(±10%のランダムなブレ、まもりは関係しない)
+  function calcMagicHeal(caster, power){
+    const stats = getEffectiveStats(caster);
+    const base = stats.youjutsu / 2 + power / 2;
+    const variance = 1 + (Math.random() * 0.2 - 0.1); // ±10%
+    return Math.max(1, Math.round(base * variance));
+  }
+
   // 「すばやさ」が高いほど攻撃を回避しやすい。
   // 防御側のすばやさが攻撃側より高いほど回避率が上がる（両者の差で判定する）。
   // kind が 'magic' で、防御側が妖術回避系スキルを持つ場合はさらに回避率を上乗せする。
@@ -1620,6 +1637,17 @@ function startBattleField(){
       totalDamage += dmg;
       hitCount++;
       if(result.critical) anyCritical = true;
+      // 「吸収」属性の妖術は、与えたダメージの半分だけ自分のHPを回復する
+      if(kind === 'magic' && element === '吸収' && dmg > 0){
+        const healAmount = Math.max(1, Math.round(dmg / 2));
+        const before = actor.hp;
+        actor.hp = Math.min(actor.maxHp, actor.hp + healAmount);
+        const healed = actor.hp - before;
+        if(healed > 0){
+          updateHpBar(actor);
+          logLine(`${actor.name} は${healed}HP吸収した！`, 'heal');
+        }
+      }
       const critTag = result.critical ? `【クリティカル！×${result.critMultiplier}】` : '';
       const attrTag = result.attrKind === 'weak' ? '【弱点！】' : (result.attrKind === 'resist' ? '【耐性】' : '');
       if(result.critical) showActionBubble(actor, `クリティカル！`);
@@ -2088,6 +2116,29 @@ function startBattleField(){
     return alive[Math.floor(Math.random() * alive.length)];
   }
 
+  // 「おせわ」等、前衛の両隣にいる味方を自分の行動のたびに少しずつ回復するパッシブスキル。
+  // 自分が前衛（インデックス0〜2）にいる時だけ発動し、隣の位置（±1）の味方が対象。
+  function healNeighbors(actor){
+    if(!actor.skill || !actor.skill.neighborHeal) return;
+    const arr = actor.side === 'enemy' ? enemyParty : party;
+    const idx = arr.indexOf(actor);
+    if(idx < 0 || idx > 2) return; // 前衛にいる時だけ
+    const rate = actor.skill.neighborHealRate || 0.02;
+    [idx - 1, idx + 1].forEach(i => {
+      if(i < 0 || i > 2) return;
+      const neighbor = arr[i];
+      if(!neighbor || !neighbor.alive || neighbor.hp >= neighbor.maxHp) return;
+      const healAmount = Math.max(1, Math.round(neighbor.maxHp * rate));
+      const before = neighbor.hp;
+      neighbor.hp = Math.min(neighbor.maxHp, neighbor.hp + healAmount);
+      const healed = neighbor.hp - before;
+      if(healed > 0){
+        updateHpBar(neighbor);
+        logLine(`${actor.name} の${actor.skill.name}！ → ${neighbor.name} が${healed}HP回復した！`, 'heal');
+      }
+    });
+  }
+
   // ---- 行動パターン ----
   const ACTIONS = ['physical', 'magic', 'guard', 'possess', 'slack'];
 
@@ -2114,11 +2165,15 @@ function startBattleField(){
     actor.guarding = false;
     // 自分にかかっているとりつき効果の残りターンを消化
     tickPossessEffects(actor);
+    // 「おせわ」等、行動するたびに発動する隣接ケア系パッシブスキル
+    healNeighbors(actor);
 
     const opponents = actor.side === 'ally' ? getFrontRowCombatants().filter(c => c.side === 'enemy') : getFrontRowCombatants().filter(c => c.side === 'ally');
     const action = chooseAction(actor);
+    const magicElement = actor.magicSkill && actor.magicSkill.element;
+    const isHealMagic = action === 'magic' && magicElement === '回復';
 
-    if((action === 'physical' || action === 'magic') && opponents.length === 0){
+    if((action === 'physical' || (action === 'magic' && !isHealMagic)) && opponents.length === 0){
       // 攻撃対象がいなければサボりに切り替え
       logLine(`${actor.name} は行動できず立ち尽くした…`);
       return;
@@ -2134,10 +2189,27 @@ function startBattleField(){
         break;
       }
       case 'magic': {
-        showActionBubble(actor, ACTION_LABELS.magic);
+        const magicName = (actor.magicSkill && actor.magicSkill.name) || ACTION_LABELS.magic;
+        showActionBubble(actor, magicName);
+        if(isHealMagic){
+          // 回復系の妖術：敵ではなく、自分の側で一番HP割合が低い前衛（自分含む）を回復する
+          const allyFront = getFrontRowCombatants().filter(c => c.side === actor.side);
+          const injured = allyFront.filter(c => c.hp < c.maxHp);
+          const healTarget = injured.length > 0
+            ? injured.reduce((worst, c) => (c.hp / c.maxHp < worst.hp / worst.maxHp ? c : worst))
+            : actor;
+          showTargetArrow(healTarget);
+          const healAmount = calcMagicHeal(actor, BASIC_ATTACK_POWER);
+          const before = healTarget.hp;
+          healTarget.hp = Math.min(healTarget.maxHp, healTarget.hp + healAmount);
+          const healed = healTarget.hp - before;
+          updateHpBar(healTarget);
+          const skillName = actor.magicSkill && actor.magicSkill.name || '回復の術';
+          logLine(`${actor.name} の${skillName}！ → ${healTarget.name} が${healed}HP回復した！`, 'heal');
+          break;
+        }
         const target = pickAttackTarget(opponents);
         showTargetArrow(target);
-        const magicElement = actor.magicSkill && actor.magicSkill.element;
         const hits = (actor.magicSkill && actor.magicSkill.hits) || 1;
         performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃');
         break;
