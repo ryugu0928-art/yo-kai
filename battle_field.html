@@ -959,6 +959,41 @@
       0 3px 6px rgba(0,0,0,0.5);
   }
 
+  /* ---- とりつき演出：自分から対象へオーラの玉が飛んでいく ---- */
+  .battle-screen .possess-orb{
+    position:absolute;
+    width:22px; height:22px;
+    border-radius:50%;
+    z-index:23;
+    pointer-events:none;
+    transform:translate(-50%, -50%);
+    transition:left 0.55s cubic-bezier(.3,.6,.2,1),
+               top 0.55s cubic-bezier(.3,.6,.2,1),
+               transform 0.25s ease,
+               opacity 0.25s ease;
+  }
+  .battle-screen .possess-orb.buff{
+    background:radial-gradient(circle at 35% 30%, #fff6c8, #ffb73b 55%, #c47a10);
+    box-shadow:0 0 10px 4px rgba(255,183,59,0.9), 0 0 22px 10px rgba(255,140,20,0.55);
+  }
+  .battle-screen .possess-orb.debuff{
+    background:radial-gradient(circle at 35% 30%, #e2c6f5, #7846a0 55%, #40204f);
+    box-shadow:0 0 10px 4px rgba(140,85,170,0.9), 0 0 22px 10px rgba(85,45,115,0.55);
+  }
+  .battle-screen .possess-orb.arrived{
+    opacity:0;
+    transform:translate(-50%, -50%) scale(2.4);
+  }
+  @keyframes possessOrbWobble{
+    0%,100%{ margin-left:0; }
+    50%{ margin-left:6px; }
+  }
+  .battle-screen .possess-orb .possess-orb-core{
+    width:100%; height:100%;
+    border-radius:50%;
+    animation:possessOrbWobble 0.28s ease-in-out infinite;
+  }
+
   /* ---- 攻撃対象を示す三角矢印 ---- */
   .battle-screen .target-arrow{
     position:absolute;
@@ -1071,6 +1106,22 @@
     background:radial-gradient(circle at 50% 40%, rgba(40,30,20,0.9), rgba(10,8,14,0.95));
     box-shadow:0 0 40px rgba(232,200,116,0.35), inset 0 0 30px rgba(0,0,0,0.6);
     overflow:hidden;
+  }
+  .ult-overlay .ult-charge-fill{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:0%;
+    z-index:0;
+    pointer-events:none;
+    background:linear-gradient(to top, rgba(80,200,255,0.85), rgba(120,220,255,0.55) 60%, rgba(160,235,255,0.18));
+    box-shadow:0 0 24px rgba(100,210,255,0.6) inset;
+    transition:height 0.15s linear;
+  }
+  .ult-overlay .ult-frame > *:not(.ult-charge-fill){
+    position:relative;
+    z-index:1;
   }
   .ult-overlay .ult-progress-ring{
     position:absolute;
@@ -1387,7 +1438,9 @@
             <circle class="ult-progress-fg" id="ultProgressFg" cx="160" cy="160" r="150"
               stroke-dasharray="942.5" stroke-dashoffset="942.5"></circle>
           </svg>
-          <div class="ult-frame" id="ultFrame"></div>
+          <div class="ult-frame" id="ultFrame">
+            <div class="ult-charge-fill" id="ultChargeFill"></div>
+          </div>
         </div>
         <div class="ult-instruction" id="ultInstruction"></div>
       </div>
@@ -2271,6 +2324,8 @@ function startBattleField(){
       if(hits > 1 && hitCount > 0){
         logLine(`${actor.name} の${actionLabel}は合計 ${totalDamage} ダメージ！（${hitCount}/${hits}発命中）`, anyCritical ? 'critical' : undefined);
       }
+      // このキャラの行動（全ヒット分）が完全に終わったので、途中で倒したキャラの人魂化をここで反映する
+      flushPendingFaintVisuals();
       if(onDone) onDone();
     }
 
@@ -2447,21 +2502,32 @@ function startBattleField(){
     renderEnemy();
   }
 
-  // 敵の前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を丸ごと入れ替える。
-  // 回転中・クールタイム中であっても、全滅は最優先で即座に反映する。
+  // 敵の前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を入れ替える。
+  // 回転中・クールタイム中であっても、全滅は最優先で即座に反映するが、
+  // 見た目はサークル入れ替えと同じ「輪をぐるっと回す」アニメーションにする
+  // （rotateEnemyParty を3回連続で呼び、前衛↔後衛がまるごと入れ替わるまで回転させる）。
+  let forcedEnemySwapAnimating = false;
   function forceSwapEnemyIfFrontWiped(){
     const frontAlive = enemyParty.slice(0, 3).some(c => c.alive);
     const reserveAlive = enemyParty.slice(3, 6).some(c => c.alive);
-    if(frontAlive || !reserveAlive) return;
+    if(frontAlive || !reserveAlive || forcedEnemySwapAnimating) return;
 
     enemyClearTimer();
     enemyPhase = 'idle';
 
-    const front = enemyParty.slice(0, 3);
-    const reserve = enemyParty.slice(3, 6);
-    enemyParty = [...reserve, ...front];
-    renderEnemy();
-    logLine('てき軍の前衛が全滅！ 後衛と入れ替わった！', 'dead');
+    logLine('てき軍の前衛が全滅！ 後衛と入れ替わる！', 'dead');
+    forcedEnemySwapAnimating = true;
+    let remaining = 3;
+    const stepOnce = () => {
+      if(remaining <= 0){
+        forcedEnemySwapAnimating = false;
+        return;
+      }
+      rotateEnemyParty(1);
+      remaining--;
+      setTimeout(stepOnce, 260);
+    };
+    stepOnce();
   }
 
   // CPUのフェーズ管理（プレイヤーのドラッグ操作に相当する自動判断版）
@@ -2622,14 +2688,17 @@ function startBattleField(){
     render();
   }
 
-  // 前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を丸ごと入れ替える。
-  // ドラッグ操作中・クールタイム中であっても、全滅は最優先で即座に反映する。
+  // 前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を入れ替える。
+  // ドラッグ操作中・クールタイム中であっても、全滅は最優先で即座に反映するが、
+  // 見た目はサークルドラッグ入れ替えと同じ「輪をぐるっと回す」アニメーションにする
+  // （rotateParty を3回連続で呼び、前衛↔後衛がまるごと入れ替わるまで回転させる）。
+  let forcedSwapAnimating = false;
   function forceSwapIfFrontWiped(){
     const frontAlive = party.slice(0, 3).some(c => c.alive);
     const reserveAlive = party.slice(3, 6).some(c => c.alive);
-    if(frontAlive || !reserveAlive) return;
+    if(frontAlive || !reserveAlive || forcedSwapAnimating) return;
 
-    // 進行中の操作があれば中断し、前衛と後衛をそのまま入れ替える
+    // 進行中の操作があれば中断し、輪を回転させて前衛と後衛を入れ替える
     clearPhaseTimers();
     dragging = false;
     phase = 'idle';
@@ -2638,11 +2707,19 @@ function startBattleField(){
     timerCountdown.classList.remove('visible');
     cooldownLabel.classList.remove('visible');
 
-    const front = party.slice(0, 3);
-    const reserve = party.slice(3, 6);
-    party = [...reserve, ...front];
-    render();
-    logLine('前衛が全滅！ 後衛と入れ替わった！', 'dead');
+    logLine('前衛が全滅！ 後衛と入れ替わる！', 'dead');
+    forcedSwapAnimating = true;
+    let remaining = 3;
+    const stepOnce = () => {
+      if(remaining <= 0){
+        forcedSwapAnimating = false;
+        return;
+      }
+      rotateParty(1);
+      remaining--;
+      setTimeout(stepOnce, 260);
+    };
+    stepOnce();
   }
 
   function pointerDown(e){
@@ -2707,7 +2784,19 @@ function startBattleField(){
     if(!el) return;
     const bar = el.querySelector('.hpbar > div:last-child') || el.querySelector('.hpbar > div');
     if(bar) bar.style.width = Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100)) + '%';
-    el.classList.toggle('dead', !c.alive);
+    // 気絶した瞬間に即座に人魂化はさせず、applyFaintVisual() が呼ばれるまでは通常の見た目を保つ。
+    // （まだ死んでいない＝alive===true に戻った場合は、待たずに即座に通常表示へ戻す）
+    if(c.alive){
+      el.classList.remove('dead');
+    }
+  }
+
+  // 気絶の見た目（人魂化）を実際に反映する。ロジック上の alive=false とは切り離して、
+  // 「攻撃したキャラの行動が完全に終わったタイミング」でまとめて呼び出す。
+  function applyFaintVisual(c){
+    const el = getCharEl(c);
+    if(!el) return;
+    if(!c.alive) el.classList.add('dead');
   }
 
   // 現在「前衛」にいる生存キャラ（味方・敵ともに、それぞれの隊列の先頭3体が前衛）
@@ -2734,6 +2823,46 @@ function startBattleField(){
       targetArrowEl.parentNode.removeChild(targetArrowEl);
     }
     targetArrowEl = null;
+  }
+
+  // ---- とりつき演出：actor の位置から target の位置へ、オーラの玉が飛んでいく ----
+  // 到達（またはタイムアウト）したら onArrive を呼ぶ。
+  function showPossessTransfer(actor, target, kind, onArrive){
+    const actorEl = getCharEl(actor);
+    const targetEl = getCharEl(target);
+    if(!actorEl || !targetEl){ if(onArrive) onArrive(); return; }
+
+    const stageRect = stage.getBoundingClientRect();
+    const startRect = actorEl.getBoundingClientRect();
+    const endRect = targetEl.getBoundingClientRect();
+    const startX = startRect.left + startRect.width / 2 - stageRect.left;
+    const startY = startRect.top + startRect.height / 2 - stageRect.top;
+    const endX = endRect.left + endRect.width / 2 - stageRect.left;
+    const endY = endRect.top + endRect.height / 2 - stageRect.top;
+
+    const orb = document.createElement('div');
+    orb.className = 'possess-orb ' + (kind === 'buff' ? 'buff' : 'debuff');
+    orb.style.left = startX + 'px';
+    orb.style.top = startY + 'px';
+    orb.innerHTML = '<div class="possess-orb-core"></div>';
+    stage.appendChild(orb);
+
+    // 位置を変える前に一度強制リフローして、開始位置からのtransitionを確実に発火させる
+    void orb.offsetWidth;
+    orb.style.left = endX + 'px';
+    orb.style.top = endY + 'px';
+
+    let finished = false;
+    function finish(){
+      if(finished) return;
+      finished = true;
+      orb.classList.add('arrived');
+      setTimeout(() => { if(orb.parentNode) orb.parentNode.removeChild(orb); }, 260);
+      if(onArrive) onArrive();
+    }
+    orb.addEventListener('transitionend', finish, { once:true });
+    // transitionendが発火しない環境向けのフォールバック
+    setTimeout(finish, 650);
   }
 
   // ---- 行動種類の吹き出し（物理攻撃以外の行動時にキャラクターの上に表示） ----
@@ -2792,6 +2921,7 @@ function startBattleField(){
   }
 
   // ---- ダメージ適用（ガード中は約50%カット。ただしガード無視スキルを持つ攻撃者には効かない） ----
+  let pendingFaintVisuals = []; // このアクター行動中に気絶したが、まだ人魂ビジュアルにしていないキャラ
   function applyDamageTo(defender, rawDamage, ignoreGuard){
     const finalDamage = (defender.guarding && !ignoreGuard) ? Math.round(rawDamage * 0.5) : rawDamage;
     defender.hp = Math.max(0, defender.hp - finalDamage);
@@ -2806,11 +2936,20 @@ function startBattleField(){
       if(typeof pinnedTarget !== 'undefined' && pinnedTarget === defender && typeof clearPin === 'function'){
         clearPin();
       }
+      // 人魂化の見た目は、攻撃したキャラの行動が完全に終わるまで保留する
+      pendingFaintVisuals.push(defender);
     }
     // 前衛が全滅した側があれば、その場で強制的に前衛と後衛を入れ替える
     forceSwapIfFrontWiped();
     forceSwapEnemyIfFrontWiped();
     return finalDamage;
+  }
+
+  // 保留中の人魂化をまとめて反映する（攻撃したキャラの行動が終わったタイミングで呼ぶ）
+  function flushPendingFaintVisuals(){
+    if(pendingFaintVisuals.length === 0) return;
+    pendingFaintVisuals.forEach(c => applyFaintVisual(c));
+    pendingFaintVisuals = [];
   }
 
   function pickRandomTarget(candidates){
@@ -2965,45 +3104,63 @@ function startBattleField(){
         // 対象は自分の側（バフ）または相手の側（デバフ）の前衛からランダムに選ぶ。
         const allies = actor.side === 'ally' ? getFrontRowCombatants().filter(c => c.side === 'ally') : getFrontRowCombatants().filter(c => c.side === 'enemy');
         const foes = opponents;
-        const possessBias = (actor.actionSeikaku && actor.actionSeikaku.possessBias != null) ? actor.actionSeikaku.possessBias : 0.5;
-        const doBuff = Math.random() < possessBias && allies.length > 0;
-        const pool = doBuff ? allies : (foes.length ? foes : allies);
+        // キャラ固有のとりつき技を持つ場合は、必ずその技の種類（バフ／デバフ）に従う。
+        // （黒鬼の「鬼の力」はバフ専用なのにデバフを撃つ…といった矛盾を防ぐため）
+        // 固有技を持たない場合のみ、行動性格の possessBias に従ってランダムに決める。
+        const presetKind = actor.possessSkill && actor.possessSkill.kind;
+        let doBuff;
+        if(presetKind === 'buff') doBuff = true;
+        else if(presetKind === 'debuff') doBuff = false;
+        else {
+          const possessBias = (actor.actionSeikaku && actor.actionSeikaku.possessBias != null) ? actor.actionSeikaku.possessBias : 0.5;
+          doBuff = Math.random() < possessBias && allies.length > 0;
+        }
+        const pool = doBuff ? allies : foes;
         const target = pickRandomTarget(pool);
-        if(target){
-          showTargetArrow(target);
-          const kind = doBuff ? 'buff' : 'debuff';
-          // とりつきの成功判定（デバフ＝敵への取り憑きのみ失敗しうる。味方へのバフは常に成功）。
-          // 「きゅうきょくのヤミ」等のスキルを持つ場合は必ず成功する。
-          const alwaysSucceeds = actor.skill && actor.skill.possessAlwaysSucceeds;
-          if(kind === 'debuff' && !alwaysSucceeds && Math.random() >= calcPossessSuccessChance(actor, target)){
-            logLine(`${actor.name} の取り憑きは${target.name}に効かなかった…`);
-            break;
-          }
+        if(!target){
+          logLine(`${actor.name} は取り憑く相手がおらず不発に終わった…`);
+          finishAction();
+          return;
+        }
+
+        showTargetArrow(target);
+        const kind = doBuff ? 'buff' : 'debuff';
+        // とりつきの成功判定（デバフ＝敵への取り憑きのみ失敗しうる。味方へのバフは常に成功）。
+        // 「きゅうきょくのヤミ」等のスキルを持つ場合は必ず成功する。
+        const alwaysSucceeds = actor.skill && actor.skill.possessAlwaysSucceeds;
+        if(kind === 'debuff' && !alwaysSucceeds && Math.random() >= calcPossessSuccessChance(actor, target)){
+          logLine(`${actor.name} の取り憑きは${target.name}に効かなかった…`);
+          finishAction();
+          return;
+        }
+
+        // ここから先は成功確定。自分から対象へオーラの玉が飛んでいく演出を挟んでから効果を適用する。
+        function applyPossessResultAndLog(){
           // キャラ固有のとりつき技があればそれを使い、無ければ標準的な効果からランダムに選ぶ。
           const preset = actor.possessSkill;
           if(preset && preset.kind === kind && preset.taunt){
             // 「挑発」系のとりつき：ステータス変化はなく、対象が常に狙われるようになる
-            const effect = applyTauntEffect(target, { duration: 5, name: preset.name });
+            applyTauntEffect(target, { duration: 5, name: preset.name });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} は常に敵から狙われるようになった！`);
-            break;
+            return;
           }
           if(preset && preset.kind === kind && preset.stun){
             // 「行動不能」系のとりつき：対象は次の行動から動けなくなる
-            const effect = applyStunEffect(target, { name: preset.name });
+            applyStunEffect(target, { name: preset.name });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} は行動不能になった！`);
-            break;
+            return;
           }
           if(preset && preset.kind === kind && preset.hot){
             // 「継続回復」系のとりつき：対象は自分の行動のたびにHPが少しずつ回復するようになる
-            const effect = applyHotEffect(target, { duration: 5, name: preset.name, rate: preset.hotRate });
+            applyHotEffect(target, { duration: 5, name: preset.name, rate: preset.hotRate });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが回復するようになった！`);
-            break;
+            return;
           }
           if(preset && preset.kind === kind && preset.dot){
             // 「継続ダメージ」系のとりつき：対象は自分の行動のたびにHPが少しずつ減っていくようになる
-            const effect = applyDotEffect(target, { name: preset.name, rate: preset.dotRate });
+            applyDotEffect(target, { name: preset.name, rate: preset.dotRate });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが減っていくようになった！`);
-            break;
+            return;
           }
           let grade, scope, stat, name;
           if(preset && preset.kind === kind){
@@ -3024,10 +3181,13 @@ function startBattleField(){
           } else {
             logLine(`${actor.name} は${target.name}に取り憑いた…！`);
           }
-        } else {
-          logLine(`${actor.name} は取り憑く相手がおらず不発に終わった…`);
         }
-        break;
+
+        showPossessTransfer(actor, target, kind, () => {
+          applyPossessResultAndLog();
+          finishAction();
+        });
+        return;
       }
       case 'slack': {
         showActionBubble(actor, ACTION_LABELS.slack);
@@ -3484,16 +3644,26 @@ function startBattleField(){
   const ULT_PROGRESS_CIRC = 2 * Math.PI * 150;
 
   const ULT_MINIGAMES = ['tap', 'trace', 'spin', 'clock'];
+  const ultChargeFill = document.getElementById('ultChargeFill');
   let currentMinigameCleanup = null;
 
   function setUltProgress(ratio){
     const clamped = Math.max(0, Math.min(1, ratio));
     ultProgressFg.style.strokeDashoffset = String(ULT_PROGRESS_CIRC * (1 - clamped));
+    // 枠内の背景も、必殺技ゲージと同じ水色で下から満ちていくように連動させる
+    if(ultChargeFill) ultChargeFill.style.height = (clamped * 100) + '%';
+  }
+
+  // ミニゲーム用に差し込んだ子要素だけを取り除く（水位エフェクト用の ultChargeFill は残す）
+  function clearUltFrameContent(){
+    Array.from(ultFrame.children).forEach(child => {
+      if(child !== ultChargeFill) child.remove();
+    });
   }
 
   function startUltChargeMinigame(actor){
     ultCasterName.textContent = `${actor.name} の必殺技をチャージ！`;
-    ultFrame.innerHTML = '';
+    clearUltFrameContent();
     setUltProgress(0);
     ultOverlay.classList.add('active');
 
@@ -3502,7 +3672,7 @@ function startBattleField(){
     function finishCharge(){
       if(currentMinigameCleanup){ currentMinigameCleanup(); currentMinigameCleanup = null; }
       ultOverlay.classList.remove('active');
-      ultFrame.innerHTML = '';
+      clearUltFrameContent();
       onUltChargeComplete(actor);
     }
 
