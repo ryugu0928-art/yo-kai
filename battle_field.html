@@ -241,6 +241,11 @@
     padding:70px 20px 24px;
     overflow-y:auto;
   }
+  /* flexコンテナの子要素はデフォルトで縮小されうるため、
+     縦に並ぶ全ブロックを明示的に縮小禁止にして高さ崩れ・重なりを防ぐ */
+  .roster-screen > *{
+    flex-shrink:0;
+  }
   .roster-screen .heading{
     color:var(--paper);
     text-align:center;
@@ -260,15 +265,41 @@
   }
 
   .roster-slots{
-    display:flex;
-    gap:16px;
-    margin-bottom:34px;
+    position:relative;
+    width:400px;
+    height:460px;
+    margin:0 auto 20px;
+    overflow:visible;
+    flex-shrink:0;
+  }
+  .roster-slots-center{
+    position:absolute;
+    top:0; left:0; width:100%; height:100%;
+    pointer-events:none;
+  }
+  .roster-slots-center .ring{
+    position:absolute;
+    top:50%; left:50%;
+    border-radius:50%;
+    border:1.5px dashed rgba(232,200,116,0.25);
+    transform:translate(-50%, -50%);
+  }
+  .roster-slots-center .ring.single{ width:260px; height:260px; }
+  .roster-zoku-bridges{
+    position:absolute;
+    top:0; left:0; width:100%; height:100%;
+    pointer-events:none;
+    z-index:1; /* 中央のガイドリングより上、トークン本体より下 */
+    overflow:visible;
   }
   .roster-slot-wrap{
+    position:absolute;
+    top:0; left:0;
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:6px;
+    transform:translate(-50%, -50%);
   }
   .seikaku-select{
     width:78px;
@@ -276,6 +307,18 @@
     font-family:inherit;
     color:var(--ink);
     background:var(--paper);
+    border:1.5px solid var(--gold);
+    border-radius:8px;
+    padding:2px 2px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .equip-select{
+    width:78px;
+    font-size:10px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#e8e0c8;
     border:1.5px solid var(--gold);
     border-radius:8px;
     padding:2px 2px;
@@ -321,12 +364,121 @@
     display:flex; align-items:center; justify-content:center;
   }
 
+  .roster-controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+    flex-shrink:0;
+  }
+  .sort-control{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:rgba(251,243,226,0.75);
+    letter-spacing:1px;
+    flex-shrink:0;
+  }
+  .sort-control select{
+    font-family:inherit;
+    font-size:12.5px;
+    color:var(--paper);
+    background:rgba(255,255,255,0.06);
+    border:1.5px solid var(--gold);
+    border-radius:10px;
+    padding:6px 10px;
+    cursor:pointer;
+  }
+  .sort-control select:focus{ outline:none; border-color:var(--gold-light); }
+  .view-mode-switch{
+    display:flex;
+    gap:0;
+    border:1.5px solid var(--gold);
+    border-radius:20px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .view-mode-btn{
+    display:inline-block;
+    font-family:inherit;
+    font-size:12px;
+    line-height:1.6;
+    letter-spacing:1px;
+    color:var(--paper);
+    background:transparent;
+    border:none;
+    padding:8px 22px;
+    cursor:pointer;
+    transition:background 0.2s ease, color 0.2s ease;
+  }
+  .view-mode-btn.active{
+    background:var(--gold);
+    color:var(--indigo-dark);
+    font-weight:700;
+  }
+  .roster-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    width:100%;
+    max-width:760px;
+    margin-bottom:30px;
+  }
+  .roster-list-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:rgba(251,243,226,0.05);
+    border:1.5px solid var(--gold);
+    border-radius:12px;
+    padding:8px 16px;
+    cursor:pointer;
+    transition:background 0.2s ease, border-color 0.2s ease;
+  }
+  .roster-list-row:hover{ border-color:var(--gold-light); }
+  .roster-list-row.selected{
+    background:rgba(232,200,116,0.16);
+    border-color:var(--gold-light);
+  }
+  .roster-list-row .token{
+    width:42px; height:42px;
+    border-radius:50%;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:15px; color:#fff;
+    border:2px solid var(--paper);
+  }
+  .roster-list-row .name{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:1px;
+    color:var(--paper);
+    width:110px;
+    flex-shrink:0;
+  }
+  .roster-list-row .rank-badge{
+    width:20px; height:20px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .roster-list-row .stat{
+    font-size:11px;
+    color:rgba(251,243,226,0.6);
+    white-space:nowrap;
+  }
   .roster-pool{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
     gap:14px;
     width:100%;
     max-width:760px;
+    margin-top:20px;
     margin-bottom:30px;
   }
   .roster-card{
@@ -372,6 +524,12 @@
   .roster-card .rank-badge.rank-C{ background:#9fd2e0; }
   .roster-card .rank-badge.rank-D{ background:#b8b8d0; }
   .roster-card .rank-badge.rank-E{ background:#c9a3a3; }
+  .roster-list-row .rank-badge.rank-S{ background:linear-gradient(135deg,#ffe27a,#ff9d3d); color:#3a1a00; }
+  .roster-list-row .rank-badge.rank-A{ background:#f0c46a; }
+  .roster-list-row .rank-badge.rank-B{ background:#cfe08b; }
+  .roster-list-row .rank-badge.rank-C{ background:#9fd2e0; }
+  .roster-list-row .rank-badge.rank-D{ background:#b8b8d0; }
+  .roster-list-row .rank-badge.rank-E{ background:#c9a3a3; }
   .roster-card .stat{ font-size:10.5px; color:rgba(251,243,226,0.6); }
 
   .roster-footer{
@@ -428,6 +586,91 @@
     z-index:20;
   }
 
+  /* ============================================================
+     妖術攻撃の技名別エフェクト演出
+  ============================================================ */
+  #magicFxLayer{
+    position:absolute; inset:0;
+    pointer-events:none;
+    z-index:18; /* キャラより上、ビネットより下 */
+  }
+  .magic-fx{ position:absolute; will-change:transform, opacity; }
+  /* 大滝の術／水流の術：画面上から勢いよく流れ落ちる水の柱 */
+  .magic-fx-waterfall{
+    width:38px;
+    background:linear-gradient(to bottom, rgba(210,240,255,0.1), rgba(120,190,240,0.85) 30%, rgba(70,150,220,0.95));
+    border-radius:0 0 40% 40% / 0 0 60% 60%;
+    box-shadow:0 0 18px 6px rgba(120,200,255,0.6);
+  }
+  .magic-fx-splash{
+    width:90px; height:36px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(210,240,255,0.9), rgba(120,190,240,0.1) 70%);
+  }
+  /* いん石の術／落石の術：斜め上から落下する岩塊 */
+  .magic-fx-rock{
+    width:26px; height:26px;
+    border-radius:34% 66% 60% 40% / 50% 40% 60% 50%;
+    background:radial-gradient(circle at 35% 30%, #b08a5f, #6b4a2f 70%);
+    box-shadow:0 0 10px 2px rgba(80,50,20,0.6);
+  }
+  /* 吹雪の術／氷結の術：四方から収束する氷片 */
+  .magic-fx-ice{
+    width:16px; height:16px;
+    background:linear-gradient(135deg, #eafcff, #9fe3f7);
+    clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    box-shadow:0 0 8px 2px rgba(160,230,255,0.8);
+  }
+  /* れんごくの術：足元から立ち上る炎 */
+  .magic-fx-flame{
+    width:20px; height:34px;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+    background:linear-gradient(to top, #ff7a00, #ffd23f 60%, rgba(255,210,63,0));
+    filter:blur(0.3px);
+  }
+  /* 嵐の術：対象を取り巻く風の渦 */
+  .magic-fx-wind{
+    width:70px; height:70px;
+    border-radius:50%;
+    border:5px solid rgba(210,255,220,0.75);
+    border-top-color:transparent;
+    border-bottom-color:transparent;
+  }
+  /* 雷神の術：空から落ちる稲妻 */
+  .magic-fx-bolt{
+    width:10px;
+    background:linear-gradient(to bottom, rgba(255,255,200,0.2), #fff8a0 40%, #fff);
+    clip-path:polygon(40% 0%, 100% 0%, 55% 45%, 90% 45%, 20% 100%, 40% 55%, 0% 55%);
+    box-shadow:0 0 20px 8px rgba(255,240,150,0.8);
+  }
+  /* 死神の術：対象を斬りつける暗い斬撃 */
+  .magic-fx-slash{
+    width:140px; height:10px;
+    background:linear-gradient(90deg, rgba(120,0,160,0), #cfa8ff 45%, #6a1fb0 55%, rgba(120,0,160,0));
+    box-shadow:0 0 14px 4px rgba(150,60,220,0.7);
+  }
+  /* 回復の術／極楽の術：柔らかい光の粒子が舞い上がる */
+  .magic-fx-light{
+    width:14px; height:14px;
+    border-radius:50%;
+    background:radial-gradient(circle, #fff9d8, #ffe27a 70%, rgba(255,226,122,0));
+    box-shadow:0 0 10px 3px rgba(255,226,122,0.8);
+  }
+  /* 吸収の術など：小さな玉が対象からキャラへ飛んでHPを吸い取る */
+  .magic-fx-orb{
+    width:14px; height:14px;
+    border-radius:50%;
+    background:radial-gradient(circle, #ffe0f0, #ff6fae 70%, rgba(255,111,174,0));
+    box-shadow:0 0 10px 3px rgba(255,111,174,0.8);
+  }
+  /* 汎用（未分類の妖術）：対象を中心に弾ける魔法陣風のバースト */
+  .magic-fx-burst{
+    width:90px; height:90px;
+    border-radius:50%;
+    border:4px solid rgba(230,200,255,0.8);
+    box-shadow:0 0 16px 4px rgba(230,200,255,0.6);
+  }
+
   .battle-screen .backdrop{
     position:absolute;
     left:50%;
@@ -478,6 +721,7 @@
   /* 必殺技ゲージ選択モード中は、満タンの味方キャラをタップできるようにする */
   .battle-screen .slot.party-member.ult-selectable{
     pointer-events:auto;
+    z-index:20;
   }
 
   .battle-screen .token{
@@ -547,6 +791,12 @@
   }
   .battle-screen .ultgauge .ult-fill{
     fill:#4fa3f0;
+  }
+  .battle-screen .ultgauge.debuffed .ult-fill{
+    fill:#8a4fd6;
+  }
+  .battle-screen .ultgauge.debuffed .ult-bg{
+    stroke:rgba(180,140,230,0.7);
   }
   .battle-screen .ultgauge clipPath rect{
     transition: y 0.1s linear, height 0.1s linear;
@@ -677,6 +927,11 @@
     display:flex;
     align-items:center;
     justify-content:center;
+  }
+  /* おはらい・必殺技の選択モード中は、後衛トークンをタップできるように
+     コマンドバー自身のヒットテストを無効化する（見た目はそのまま） */
+  .battle-screen .command-bar.selection-passthrough{
+    pointer-events:none;
   }
   .battle-screen .command-bar.dragging{
     cursor:grabbing;
@@ -1200,6 +1455,315 @@
     filter:drop-shadow(0 0 4px rgba(255,220,120,0.8));
   }
 
+  /* ============================================================
+     おはらい：後衛のデバフキャラを選んで、とりつきを解除するミニゲーム
+  ============================================================ */
+  .battle-screen .oharai-select-hint{
+    position:absolute;
+    top:2%;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(16,8,22,0.75);
+    color:#d9b6f5;
+    border:2px solid #9a63d6;
+    border-radius:14px;
+    padding:6px 18px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    z-index:40;
+    white-space:nowrap;
+  }
+  .battle-screen .action-menu .btn-oharai.oharai-armed{
+    animation:pulseGlow 1s ease-in-out infinite;
+  }
+  /* 後衛にいてデバフを受けている味方だけ、おはらい選択モード中はタップできる */
+  .battle-screen .slot.party-member.oharai-selectable{
+    pointer-events:auto;
+    z-index:20;
+  }
+  .slot.oharai-selectable{ cursor:pointer; }
+  .slot.oharai-selectable .token{
+    animation:oharaiSelectablePulse 0.9s ease-in-out infinite;
+  }
+  @keyframes oharaiSelectablePulse{
+    0%,100%{ box-shadow:0 0 0 rgba(150,90,220,0); transform:scale(1); }
+    50%{ box-shadow:0 0 18px 4px rgba(150,90,220,0.85); transform:scale(1.05); }
+  }
+
+  .oharai-overlay{
+    position:absolute;
+    inset:0;
+    z-index:100;
+    background:rgba(10,5,16,0.78);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease;
+  }
+  .oharai-overlay.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .oharai-overlay .oharai-title{
+    position:absolute;
+    top:8%;
+    left:50%;
+    transform:translateX(-50%);
+    color:#d9b6f5;
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:8px;
+    text-shadow:0 0 16px rgba(150,90,220,0.6);
+    z-index:2;
+  }
+  .oharai-overlay .oharai-caster-name{
+    position:absolute;
+    top:16%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--paper);
+    font-size:13px;
+    letter-spacing:3px;
+    z-index:2;
+  }
+  .oharai-overlay .oharai-ring-wrap{
+    position:relative;
+    width:min(58vh, 320px);
+    height:min(58vh, 320px);
+  }
+  .oharai-overlay .oharai-frame{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:5px solid #9a63d6;
+    background:radial-gradient(circle at 50% 40%, rgba(35,20,45,0.9), rgba(8,6,12,0.95));
+    box-shadow:0 0 40px rgba(150,90,220,0.35), inset 0 0 30px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  /* 薄紫のモヤ。おはらいの進み具合に応じて透明度が下がり、完了で完全に晴れる */
+  .oharai-overlay .oharai-mist{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:1;
+    background:radial-gradient(circle at 50% 55%, rgba(160,100,230,0.5), rgba(95,45,145,0.7) 70%, rgba(60,25,95,0.82));
+    box-shadow:0 0 30px rgba(150,90,220,0.5) inset;
+    transition:opacity 0.2s linear;
+  }
+  .oharai-overlay .oharai-frame > *:not(.oharai-mist){
+    position:relative;
+    z-index:1;
+  }
+  .oharai-overlay .oharai-progress-ring{
+    position:absolute;
+    inset:-5px;
+    width:calc(100% + 10px);
+    height:calc(100% + 10px);
+    pointer-events:none;
+    transform:rotate(-90deg);
+  }
+  .oharai-overlay .oharai-progress-bg{
+    fill:none; stroke:rgba(255,255,255,0.15); stroke-width:5;
+  }
+  .oharai-overlay .oharai-progress-fg{
+    fill:none; stroke:#d9b6f5; stroke-width:5; stroke-linecap:round;
+    transition:stroke-dashoffset 0.15s linear;
+  }
+  .oharai-overlay .oharai-instruction{
+    position:absolute;
+    bottom:6%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--paper);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(20,10,8,0.6);
+    border:1.5px solid #9a63d6;
+    border-radius:12px;
+    padding:6px 20px;
+    white-space:nowrap;
+    z-index:2;
+  }
+
+  /* ---- 「つぶせ！」紫のブロブ ---- */
+  .oharai-blob{
+    position:absolute;
+    width:36px; height:36px;
+    border-radius:46% 54% 60% 40% / 50% 45% 55% 50%;
+    background:radial-gradient(circle at 35% 30%, #e6d0ff, #8a4fd6 60%, #4a2470);
+    box-shadow:0 0 10px rgba(150,90,220,0.8);
+    transform:translate(-50%,-50%);
+    cursor:pointer;
+    transition:opacity 0.15s ease, transform 0.15s ease;
+  }
+  .oharai-blob.crushed{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(0.15);
+  }
+
+  /* ---- 「連打！」紫の氷塊とアイスピック ---- */
+  .oharai-ice-block{
+    position:absolute;
+    inset:12%;
+    border-radius:18% 22% 20% 24% / 24% 20% 26% 22%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35), rgba(255,255,255,0) 40%),
+      linear-gradient(135deg, #d9baff, #8a4fd6 55%, #4a2470);
+    box-shadow:0 0 26px rgba(150,90,220,0.6), inset 0 0 30px rgba(255,255,255,0.15);
+    touch-action:none;
+    pointer-events:none;
+    transition:filter 0.15s ease;
+  }
+  .oharai-ice-block.crit-flash{
+    filter:brightness(1.7) saturate(1.3);
+  }
+  /* ダメージが蓄積するにつれてヒビ模様を段階的に表示する */
+  .oharai-ice-block::before,
+  .oharai-ice-block::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background-repeat:no-repeat;
+    background-size:100% 100%;
+    opacity:0;
+    transition:opacity 0.25s ease;
+    pointer-events:none;
+  }
+  .oharai-ice-block::before{
+    background-image:
+      linear-gradient(105deg, transparent 46%, rgba(255,255,255,0.55) 47%, transparent 48%),
+      linear-gradient(15deg, transparent 60%, rgba(255,255,255,0.45) 61%, transparent 62%);
+  }
+  .oharai-ice-block::after{
+    background-image:
+      linear-gradient(70deg, transparent 30%, rgba(255,255,255,0.5) 31%, transparent 32%),
+      linear-gradient(160deg, transparent 70%, rgba(255,255,255,0.5) 71%, transparent 72%),
+      linear-gradient(20deg, transparent 20%, rgba(255,255,255,0.4) 21%, transparent 22%);
+  }
+  .oharai-ice-block.cracked-1::before{ opacity:0.6; }
+  .oharai-ice-block.cracked-2::before{ opacity:1; }
+  .oharai-ice-block.cracked-3::before{ opacity:1; }
+  .oharai-ice-block.cracked-2::after{ opacity:0.5; }
+  .oharai-ice-block.cracked-3::after{ opacity:1; }
+  /* 完全に割れた瞬間の演出：本体が弾けて消える */
+  .oharai-ice-block.shatter{
+    animation:oharaiIceShatter 0.35s ease forwards;
+  }
+  @keyframes oharaiIceShatter{
+    0%{ opacity:1; transform:scale(1); filter:brightness(1.5); }
+    40%{ opacity:1; transform:scale(1.06); filter:brightness(2.2); }
+    100%{ opacity:0; transform:scale(1.15); filter:brightness(2.2); }
+  }
+  /* 割れた瞬間に飛び散る氷の破片 */
+  .oharai-ice-shard{
+    position:absolute;
+    width:12px; height:12px;
+    background:linear-gradient(135deg, #e6d0ff, #8a4fd6);
+    box-shadow:0 0 6px rgba(150,90,220,0.8);
+    border-radius:2px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    animation:oharaiShardFly 0.55s cubic-bezier(.2,.7,.4,1) forwards;
+  }
+  @keyframes oharaiShardFly{
+    0%{ opacity:1; transform:translate(-50%,-50%) rotate(0deg) scale(1); }
+    100%{
+      opacity:0;
+      transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(0.4);
+    }
+  }
+  .oharai-icepick{
+    position:absolute;
+    width:1px; height:1px;
+    transform:translate(-15%, -85%) rotate(-35deg);
+    font-size:44px;
+    line-height:1;
+    pointer-events:none;
+    z-index:5;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,0.5));
+    transition:left 0.05s linear, top 0.05s linear;
+  }
+  .oharai-icepick.jab{
+    animation:oharaiPickJab 0.12s ease;
+  }
+  @keyframes oharaiPickJab{
+    0%{ transform:translate(-15%, -85%) rotate(-35deg) scale(1); }
+    50%{ transform:translate(-5%, -60%) rotate(-20deg) scale(1.05); }
+    100%{ transform:translate(-15%, -85%) rotate(-35deg) scale(1); }
+  }
+  .oharai-ice-crack{
+    position:absolute;
+    width:14px; height:14px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:rgba(255,255,255,0.85);
+    box-shadow:0 0 10px rgba(255,255,255,0.9);
+    pointer-events:none;
+    animation:oharaiCrackFade 0.3s ease forwards;
+  }
+  .oharai-ice-crack.weak{
+    width:60px; height:60px;
+    background:radial-gradient(circle, rgba(255,235,150,0.95), rgba(255,183,59,0.6) 55%, rgba(255,183,59,0) 75%);
+    box-shadow:0 0 40px rgba(255,200,80,0.9);
+    animation:oharaiCrackFade 0.5s ease forwards;
+  }
+  @keyframes oharaiCrackFade{
+    0%{ opacity:1; transform:translate(-50%,-50%) scale(0.4); }
+    60%{ opacity:0.9; transform:translate(-50%,-50%) scale(1.1); }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(1.3); }
+  }
+
+  /* ---- 「斬れ！」鎖とスワイプ演出 ---- */
+  .oharai-slash-svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+  .oharai-chain-link{
+    stroke-width:9;
+    stroke-linecap:round;
+    opacity:0.92;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+    transition:opacity 0.15s ease;
+  }
+  .oharai-chain-link.cutpoint{
+    stroke-dasharray:2 6;
+  }
+  .oharai-chain-group.nicked .oharai-chain-link{
+    opacity:0.55;
+  }
+  .oharai-chain-group.severed .oharai-chain-link{
+    opacity:0;
+    transition:opacity 0.25s ease;
+  }
+  .oharai-slash-line{
+    stroke:#e6d0ff; stroke-width:5; stroke-linecap:round;
+    opacity:0.9;
+    animation:oharaiSlashFade 0.35s ease forwards;
+  }
+  @keyframes oharaiSlashFade{
+    0%{ opacity:0.95; }
+    100%{ opacity:0; }
+  }
+
+  /* ---- 「超ラッキー！」金色オーブ ---- */
+  .oharai-lucky-orb{
+    position:absolute;
+    left:50%; top:50%;
+    width:90px; height:90px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6c8, #ffb73b 55%, #c47a10);
+    box-shadow:0 0 30px rgba(255,183,59,0.9), 0 0 60px rgba(255,140,20,0.5);
+    cursor:pointer;
+    animation:oharaiLuckyPulse 1s ease-in-out infinite;
+  }
+  @keyframes oharaiLuckyPulse{
+    0%,100%{ transform:translate(-50%,-50%) scale(1); }
+    50%{ transform:translate(-50%,-50%) scale(1.08); }
+  }
+
   /* ---- 必殺技発動演出 ---- */
   .ult-cast-banner{
     position:absolute;
@@ -1234,6 +1798,52 @@
     letter-spacing:4px;
     color:#fff;
     text-shadow:0 0 20px rgba(232,200,116,0.9), 0 4px 6px rgba(0,0,0,0.8);
+  }
+
+  /* ============================================================
+     「〇〇の陣」発動時のバナー演出（種族のイメージカラーで縁取ったリボン）
+  ============================================================ */
+  .zoku-jin-banner{
+    --zoku-color:#e8c874;
+    position:absolute;
+    top:30%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.7);
+    z-index:61;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+  }
+  .zoku-jin-banner.show{
+    animation:zokuJinBannerIn 1.6s ease forwards;
+  }
+  @keyframes zokuJinBannerIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.7); }
+    15%{ opacity:1; transform:translate(-50%,-50%) scale(1.1); }
+    25%{ transform:translate(-50%,-50%) scale(1); }
+    80%{ opacity:1; }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(1); }
+  }
+  .zoku-jin-banner .name{
+    display:inline-block;
+    font-size:clamp(24px, 4.6vw, 38px);
+    font-weight:900;
+    letter-spacing:3px;
+    color:#fff;
+    padding:6px 28px;
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--zoku-color), rgba(0,0,0,0.55));
+    border:3px solid var(--zoku-color);
+    box-shadow:0 0 22px var(--zoku-color), 0 4px 10px rgba(0,0,0,0.6);
+    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+  }
+  .zoku-jin-banner .desc{
+    margin-top:8px;
+    font-size:clamp(14px, 2.4vw, 18px);
+    font-weight:700;
+    letter-spacing:2px;
+    color:var(--zoku-color);
+    text-shadow:0 0 8px rgba(0,0,0,0.9), 0 2px 3px rgba(0,0,0,0.8);
   }
 
   /* ============================================================
@@ -1367,11 +1977,35 @@
       <h2>キャラクター へんせい</h2>
     </div>
 
-    <!-- 出撃メンバー（最大6体、先頭3体が前衛になる） -->
-    <div class="roster-slots" id="rosterSlots"></div>
+    <!-- 出撃メンバー（最大6体、サークルスロットに配置。内側3枠が前衛、外側3枠が後衛） -->
+    <div class="roster-slots" id="rosterSlots">
+      <div class="roster-slots-center">
+        <div class="ring single"></div>
+      </div>
+      <svg class="roster-zoku-bridges" id="rosterZokuBridges" viewBox="0 0 400 460"></svg>
+    </div>
 
-    <!-- 選択候補キャラ一覧 -->
+    <!-- 選択候補キャラ一覧：表示モード切替スイッチ・並び順セレクト -->
+    <div class="roster-controls">
+      <div class="view-mode-switch" id="viewModeSwitch">
+        <button class="view-mode-btn active" data-view="card" type="button">カード表示</button>
+        <button class="view-mode-btn" data-view="list" type="button">リスト表示</button>
+      </div>
+      <div class="sort-control">
+        <label for="rosterSortSelect">ならびじゅん</label>
+        <select id="rosterSortSelect">
+          <option value="added">追加順</option>
+          <option value="zoku">種族順</option>
+          <option value="rank">ランク順</option>
+          <option value="name">名前順</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 選択候補キャラ一覧（カード表示） -->
     <div class="roster-pool" id="rosterPool"></div>
+    <!-- 選択候補キャラ一覧（リスト表示） -->
+    <div class="roster-list" id="rosterList" style="display:none;"></div>
 
     <div class="roster-footer">
       <div class="count"><strong id="selectedCount">0</strong> / 6 にん せんたく中</div>
@@ -1398,6 +2032,9 @@
 
       <!-- 自分のパーティ全6体を固定DOM要素として生成し、JSで前衛/後衛の位置に実際に移動させる -->
       <div id="partyLayer"></div>
+
+      <!-- 妖術攻撃の技名に応じた演出エフェクトをここに動的生成する -->
+      <div id="magicFxLayer"></div>
 
       <div class="vignette"></div>
 
@@ -1445,10 +2082,36 @@
         <div class="ult-instruction" id="ultInstruction"></div>
       </div>
 
+      <!-- おはらい選択時のヒント表示 -->
+      <div class="oharai-select-hint" id="oharaiSelectHint" style="display:none;">後衛にいるデバフ中のキャラをタップ！</div>
+
+      <!-- おはらい・ミニゲーム オーバーレイ -->
+      <div class="oharai-overlay" id="oharaiOverlay">
+        <div class="oharai-title" id="oharaiOverlayTitle">おはらい</div>
+        <div class="oharai-caster-name" id="oharaiCasterName"></div>
+        <div class="oharai-ring-wrap" id="oharaiRingWrap">
+          <svg class="oharai-progress-ring" viewBox="0 0 320 320">
+            <circle class="oharai-progress-bg" cx="160" cy="160" r="150"></circle>
+            <circle class="oharai-progress-fg" id="oharaiProgressFg" cx="160" cy="160" r="150"
+              stroke-dasharray="942.5" stroke-dashoffset="942.5"></circle>
+          </svg>
+          <div class="oharai-frame" id="oharaiFrame">
+            <div class="oharai-mist" id="oharaiMist"></div>
+          </div>
+        </div>
+        <div class="oharai-instruction" id="oharaiInstruction"></div>
+      </div>
+
       <!-- 必殺技発動時のバナー演出 -->
       <div class="ult-cast-banner" id="ultCastBanner">
         <div class="who" id="ultCastWho"></div>
         <div class="name" id="ultCastName"></div>
+      </div>
+
+      <!-- 「〇〇の陣」発動時のバナー演出 -->
+      <div class="zoku-jin-banner" id="zokuJinBanner">
+        <div class="name" id="zokuJinName"></div>
+        <div class="desc" id="zokuJinDesc"></div>
       </div>
 
       <!-- 「ねらう」：ドラッグ追従するスコープ -->
@@ -1558,30 +2221,133 @@ function getActionPersonality(id){
   return ACTION_PERSONALITIES.find(p => p.id === id) || null;
 }
 
+// キャラ本来（生まれつき）の行動の出やすさ。行動性格に関わらずキャラごとに決まっている土台の傾向。
+// 値は「重み」で、4つの合計が1.0になるよう各キャラに設定する（未設定キャラは均等0.25ずつ）。
+const DEFAULT_BASE_ACTION_TENDENCY = { physical:0.25, magic:0.25, guard:0.25, possess:0.25 };
+function getBaseActionTendency(charDef){
+  return (charDef && charDef.baseActionTendency) || DEFAULT_BASE_ACTION_TENDENCY;
+}
+
 // 行動性格から、このターンの行動選択の確率テーブル（physical/magic/guard/possess の4つ、合計1.0）を作る。
-// hpScaling な性格は、残りHP割合が低いほど mainAction（ガード）の比率が上がる
+// キャラ本来の行動傾向（baseActionTendency）と、プレイヤーが選ぶ行動性格の補正（mainAction/mainRate）を
+// 合成する：まずキャラ本来の重みを土台にし、そこへ行動性格の主行動ぶんの重みを上乗せしてから正規化する。
+// hpScaling な性格は、残りHP割合が低いほど mainAction（ガード）の上乗せ幅がさらに大きくなる
 // （満タン時は定義通りの確率、瀕死時はさらに+20%ポイント程度まで上乗せ、上限95%）。
 function buildActionRateTable(actor){
   const ALL_ACTIONS = ['physical', 'magic', 'guard', 'possess'];
+  const base = getBaseActionTendency(actor.charDef);
   const p = actor.actionSeikaku;
+
+  // 行動性格が無い場合は、キャラ本来の傾向をそのまま使う
   if(!p){
-    return { physical:0.25, magic:0.25, guard:0.25, possess:0.25 };
+    const sum = ALL_ACTIONS.reduce((s, a) => s + (base[a] || 0), 0) || 1;
+    const table = {};
+    ALL_ACTIONS.forEach(a => { table[a] = (base[a] || 0) / sum; });
+    return table;
   }
+
   let mainRate = p.mainRate;
   if(p.hpScaling){
     const hpRatio = actor.maxHp > 0 ? Math.max(0, Math.min(1, actor.hp / actor.maxHp)) : 1;
     const bonus = (1 - hpRatio) * 0.20; // HPが減るほど最大+20%ポイント
     mainRate = Math.min(0.95, p.mainRate + bonus);
   }
-  const others = ALL_ACTIONS.filter(a => a !== p.mainAction);
-  const otherRate = (1 - mainRate) / others.length;
+
+  // キャラ本来の重み（合計1.0に正規化）を土台とし、行動性格の主行動に mainRate ぶんの重みを加算する。
+  // こうすることで「素で得意な行動」と「編成時に選んだ行動性格」の両方の影響が反映される。
+  const baseSum = ALL_ACTIONS.reduce((s, a) => s + (base[a] || 0), 0) || 1;
+  const combined = {};
+  ALL_ACTIONS.forEach(a => { combined[a] = (base[a] || 0) / baseSum; });
+  combined[p.mainAction] = (combined[p.mainAction] || 0) + mainRate;
+
+  const total = ALL_ACTIONS.reduce((s, a) => s + combined[a], 0) || 1;
   const table = {};
-  ALL_ACTIONS.forEach(a => { table[a] = (a === p.mainAction) ? mainRate : otherRate; });
+  ALL_ACTIONS.forEach(a => { table[a] = combined[a] / total; });
   return table;
 }
 
 
 // 選ばれた行動性格のステータス補正を、キャラの基礎ステータス（およびmaxHp）に加算する
+// ============================================================
+// 装備システム
+// キャラの装備枠は通常1枠。種類ごとに上げるステータスの傾向が決まっている。
+//   腕輪(udewa)  : ちから  を上げる
+//   指輪(yubiwa) : ようじゅつ を上げる
+//   バッジ(badge): すばやさ を上げる
+//   お守り(omamori): まもり を上げる
+//   魂(tamashii) : ステータスではなく特殊効果を付与する
+// ステータス系の装備は bonuses（各ステータスへの加算値）を持つ。
+// 魂などの特殊効果系は effect（効果の種類・値）を持ち、バトル側のロジックで参照する想定。
+// ※ 装備ごとの詳細な数値・効果は後で詰める前提の暫定値。
+const EQUIPMENT_LIST = [
+  { id:'none', name:'なし', type:'none', desc:'装備しない' },
+
+  { id:'udewa_1', name:'てつの腕輪', type:'udewa', desc:'ちからが少し上がる', bonuses:{ chikara:10 } },
+  { id:'udewa_2', name:'こがねの腕輪', type:'udewa', desc:'ちからが上がる', bonuses:{ chikara:20 } },
+
+  { id:'yubiwa_1', name:'みずの指輪', type:'yubiwa', desc:'ようじゅつが少し上がる', bonuses:{ youjutsu:10 } },
+  { id:'yubiwa_2', name:'ほしくずの指輪', type:'yubiwa', desc:'ようじゅつが上がる', bonuses:{ youjutsu:20 } },
+
+  { id:'badge_1', name:'かぜのバッジ', type:'badge', desc:'すばやさが少し上がる', bonuses:{ subayasa:10 } },
+  { id:'badge_2', name:'いなずまのバッジ', type:'badge', desc:'すばやさが上がる', bonuses:{ subayasa:20 } },
+
+  { id:'omamori_1', name:'いしのお守り', type:'omamori', desc:'まもりが少し上がる', bonuses:{ mamori:10 } },
+  { id:'omamori_2', name:'こんてつのお守り', type:'omamori', desc:'まもりが上がる', bonuses:{ mamori:20 } },
+
+  { id:'tamashii_1', name:'いかりの魂', type:'tamashii', desc:'HPが低いほど、こうげきの威力が上がる', effect:{ kind:'lowHpAttackUp' } },
+  { id:'tamashii_2', name:'まもりの魂', type:'tamashii', desc:'せんとう開始時、じぶんに小さなシールドをはる', effect:{ kind:'startBattleShield' } },
+  { id:'tamashii_3', name:'ガマン魂', type:'tamashii', desc:'HPが0になるとき、一度だけHP1で耐える', effect:{ kind:'enduranceOnce' } },
+  { id:'tamashii_4', name:'閃光魂', type:'tamashii', desc:'スキル「閃光」と同じ効果（一度だけ先制攻撃できる）', effect:{ kind:'preemptiveStrike' } },
+  { id:'tamashii_5', name:'ガード魂', type:'tamashii', desc:'行動がすべてガードになる', effect:{ kind:'alwaysGuard' } },
+  { id:'tamashii_6', name:'挑発魂', type:'tamashii', desc:'常に狙われる（「ねらう」で刺したピンより優先される）', effect:{ kind:'taunt' } },
+  { id:'tamashii_7', name:'隠密魂', type:'tamashii', desc:'狙われなくなる（前衛が隠密魂持ちのみになった場合はランダムに狙われる。ピンよりやや優先）', effect:{ kind:'stealth' } },
+  { id:'tamashii_8', name:'ブロッカー魂', type:'tamashii', desc:'後衛から前衛に出るとき、ガード状態で出る', effect:{ kind:'guardOnEnterFront' } },
+];
+
+const EQUIPMENT_TYPE_LABELS = {
+  none:'なし', udewa:'腕輪', yubiwa:'指輪', badge:'バッジ', omamori:'お守り', tamashii:'魂',
+};
+
+function getEquipment(id){
+  return EQUIPMENT_LIST.find(e => e.id === id) || EQUIPMENT_LIST[0];
+}
+
+// キャラが指定の種類の魂（装備の特殊効果）を持っているかどうかを判定する共通ヘルパー。
+// c.equipment は startBattleField でプレイヤー側にのみ付与される想定（CPU側は未設定=undefinedで安全に false になる）。
+function hasEquipEffect(c, kind){
+  return !!(c && c.equipment && c.equipment.effect && c.equipment.effect.kind === kind);
+}
+
+// 装備セレクト用のHTML（種類ごとにoptgroupでまとめる）を組み立てる
+function buildEquipmentOptionsHtml(selectedId){
+  const types = ['udewa', 'yubiwa', 'badge', 'omamori', 'tamashii'];
+  let html = `<option value="none" ${selectedId === 'none' ? 'selected' : ''}>装備なし</option>`;
+  types.forEach(type => {
+    const items = EQUIPMENT_LIST.filter(e => e.type === type);
+    if(items.length === 0) return;
+    html += `<optgroup label="${EQUIPMENT_TYPE_LABELS[type]}">`;
+    items.forEach(e => {
+      html += `<option value="${e.id}" ${e.id === selectedId ? 'selected' : ''}>${e.name}</option>`;
+    });
+    html += `</optgroup>`;
+  });
+  return html;
+}
+
+// 装備によるステータス加算・特殊効果を、既存のstats/hpに合成する。
+// 行動性格の合成（applyPersonalityBonuses）と同様のパターンで、こちらは装備ぶんだけを別途加算する。
+function applyEquipmentBonuses(stats, equipmentId){
+  const eq = getEquipment(equipmentId);
+  const result = { ...stats };
+  if(eq && eq.bonuses){
+    if(eq.bonuses.chikara) result.chikara += eq.bonuses.chikara;
+    if(eq.bonuses.mamori) result.mamori += eq.bonuses.mamori;
+    if(eq.bonuses.youjutsu) result.youjutsu += eq.bonuses.youjutsu;
+    if(eq.bonuses.subayasa) result.subayasa += eq.bonuses.subayasa;
+  }
+  return result;
+}
+
 function applyPersonalityBonuses(baseStats, baseHp, actionPersonalityId){
   const stats = { chikara: baseStats.chikara, mamori: baseStats.mamori, youjutsu: baseStats.youjutsu, subayasa: baseStats.subayasa };
   let hp = baseHp;
@@ -1598,7 +2364,7 @@ function applyPersonalityBonuses(baseStats, baseHp, actionPersonalityId){
 
 // 選べるキャラのプール（本来はサーバーやセーブデータから取得する想定のダミーデータ）
 const characterPool = [
-  { id:'p1', cls:'c-cream',  label:'A', name:'ブシニャン', rank:'S', no:322, zoku:'イサマシ族', maxHp:272, slackSeikaku:'sunao',
+  { id:'p1', cls:'c-cream',  label:'A', name:'ブシニャン', rank:'S', no:322, zoku:'イサマシ族', maxHp:272, baseActionTendency:{ physical:0.55, magic:0.15, guard:0.10, possess:0.20 }, slackSeikaku:'sunao',
     stats:{ chikara:157, mamori:95, youjutsu:89, subayasa:158 },
     skill:{ name:'超クリティカル', desc:'クリティカルのいりょくが高くなる(2.0倍)', critMultiplier:2.0 },
     tokui:'風', jaku:'氷',
@@ -1607,7 +2373,7 @@ const characterPool = [
     possess:{ name:'武士の心', desc:'ちから大アップ', kind:'buff', grade:'large', scope:'single', stat:'chikara' },
     ult:{ name:'かつおブシ斬り', power:25, hits:10, target:'all' }
   },
-  { id:'p2', cls:'c-orange', label:'B', name:'犬神', rank:'S', no:81, zoku:'フシギ族', maxHp:273, slackSeikaku:'sunao',
+  { id:'p2', cls:'c-orange', label:'B', name:'犬神', rank:'S', no:81, zoku:'フシギ族', maxHp:273, baseActionTendency:{ physical:0.20, magic:0.45, guard:0.15, possess:0.20 }, slackSeikaku:'sunao',
     stats:{ chikara:88, mamori:103, youjutsu:177, subayasa:128 },
     skill:{ name:'きゅうかく', desc:'攻撃が必ず命中する', alwaysHit:true },
     tokui:'氷', jaku:'火',
@@ -1616,7 +2382,7 @@ const characterPool = [
     possess:{ name:'犬神の加護', desc:'ようりょくアップ', kind:'buff', grade:'normal', scope:'single', stat:'youjutsu' },
     ult:{ name:'氷結地獄', power:250, target:'all' }
   },
-  { id:'p3', cls:'c-blue', label:'C', name:'黒鬼', rank:'S', no:440, zoku:'ゴーケツ族', maxHp:456, slackSeikaku:'sunao',
+  { id:'p3', cls:'c-blue', label:'C', name:'黒鬼', rank:'S', no:440, zoku:'ゴーケツ族', maxHp:456, baseActionTendency:{ physical:0.45, magic:0.15, guard:0.30, possess:0.10 }, slackSeikaku:'sunao',
     stats:{ chikara:177, mamori:189, youjutsu:81, subayasa:98 },
     skill:{ name:'におうだち', desc:'真ん中にいる時だけまもりアップ', middleMamoriBoost:true },
     tokui:'氷', jaku:'風',
@@ -1625,7 +2391,7 @@ const characterPool = [
     possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
     ult:{ name:'悪夢の金棒', power:350, target:'single' }
   },
-  { id:'p4', cls:'c-purple', label:'D', name:'ネタバレリーナ', rank:'S', no:325, zoku:'プリチー族', maxHp:265, slackSeikaku:'sunao',
+  { id:'p4', cls:'c-purple', label:'D', name:'ネタバレリーナ', rank:'S', no:325, zoku:'プリチー族', maxHp:265, baseActionTendency:{ physical:0.35, magic:0.30, guard:0.10, possess:0.25 }, slackSeikaku:'sunao',
     stats:{ chikara:100, mamori:98, youjutsu:130, subayasa:174 },
     skill:{ name:'かれいなステップ', desc:'敵の妖術をよけまくる(回避率40%ほど)', magicEvasionBonus:0.4 },
     tokui:'風', jaku:'氷',
@@ -1634,7 +2400,7 @@ const characterPool = [
     possess:{ name:'ネタバレさせる', desc:'常に敵から狙われる', kind:'buff', taunt:true },
     ult:{ name:'ネタバレフィナーレ', power:0, target:'self', heal:'full', buffAll:true, desc:'HPを全回復しつつ全ステータスアップ' }
   },
-  { id:'p5', cls:'c-red', label:'E', name:'花さか爺', rank:'S', no:326, zoku:'ポカポカ族', maxHp:250, slackSeikaku:'sunao',
+  { id:'p5', cls:'c-red', label:'E', name:'花さか爺', rank:'S', no:326, zoku:'ポカポカ族', maxHp:250, baseActionTendency:{ physical:0.10, magic:0.30, guard:0.15, possess:0.45 }, slackSeikaku:'sunao',
     stats:{ chikara:93, mamori:104, youjutsu:164, subayasa:154 },
     skill:{ name:'おせわ', desc:'となりにいるキャラのHPを少しずつ回復する(1行動で最大HPの2％ずつ回復させる)', neighborHeal:true, neighborHealRate:0.02 },
     tokui:'土', jaku:'風',
@@ -1643,7 +2409,7 @@ const characterPool = [
     possess:{ name:'奇跡の桜', desc:'すばやさ大アップ', kind:'buff', grade:'large', scope:'single', stat:'subayasa' },
     ult:{ name:'満開サクラサク', power:0, target:'ally-front', revive:true, healAll:true, desc:'気絶している前衛を復活させて前衛全体のHPを回復させる(回復量=ようじゅつ/2+125±10%)' }
   },
-  { id:'p6', cls:'c-green', label:'F', name:'うんちく魔', rank:'S', no:327, zoku:'ウスラカゲ族', maxHp:285, slackSeikaku:'sunao',
+  { id:'p6', cls:'c-green', label:'F', name:'うんちく魔', rank:'S', no:327, zoku:'ウスラカゲ族', maxHp:285, baseActionTendency:{ physical:0.35, magic:0.35, guard:0.10, possess:0.20 }, slackSeikaku:'sunao',
     stats:{ chikara:146, mamori:71, youjutsu:131, subayasa:133 },
     skill:{ name:'うんちく', desc:'敵味方全員の妖術の属性が無くなる', nullifyMagicElement:true },
     tokui:'火', jaku:'水',
@@ -1652,7 +2418,7 @@ const characterPool = [
     possess:{ name:'うんちくを言わせる', desc:'行動不能', kind:'debuff', stun:true },
     ult:{ name:'うんざりうんちく地獄', power:150, target:'all', debuff:'confuse', desc:'全体攻撃＋混乱デバフ' }
   },
-  { id:'p7', cls:'c-teal', label:'G', name:'イケメン犬', rank:'S', no:328, zoku:'ブキミー族', maxHp:302, slackSeikaku:'sunao',
+  { id:'p7', cls:'c-teal', label:'G', name:'イケメン犬', rank:'S', no:328, zoku:'ブキミー族', maxHp:302, baseActionTendency:{ physical:0.20, magic:0.35, guard:0.15, possess:0.30 }, slackSeikaku:'sunao',
     stats:{ chikara:101, mamori:86, youjutsu:138, subayasa:169 },
     skill:{ name:'モテモテ', desc:'敵が仲間になりやすくなる(今回のバトルのみのゲームでは効果なし)' },
     tokui:'水', jaku:'雷',
@@ -1661,7 +2427,7 @@ const characterPool = [
     possess:{ name:'いやしのふんいき', desc:'HPがだんだん回復する', kind:'buff', hot:true, hotRate:0.05 },
     ult:{ name:'イケメン様のほほえみ', power:0, target:'ally-front', healAll:true, desc:'前衛全体のHPを全回復する' }
   },
-  { id:'p8', cls:'c-pink', label:'H', name:'やまタン', rank:'S', no:329, zoku:'ニョロロン族', maxHp:338, slackSeikaku:'sunao',
+  { id:'p8', cls:'c-pink', label:'H', name:'やまタン', rank:'S', no:329, zoku:'ニョロロン族', maxHp:338, baseActionTendency:{ physical:0.50, magic:0.20, guard:0.10, possess:0.20 }, slackSeikaku:'sunao',
     stats:{ chikara:148, mamori:89, youjutsu:148, subayasa:127 },
     skill:{ name:'8枚舌', desc:'攻撃したとき敵のガードの効果を無視する(物理攻撃のみ・威力は本来の93%)', ignoreGuard:true },
     tokui:'火', jaku:'水',
@@ -1670,7 +2436,7 @@ const characterPool = [
     possess:{ name:'8倍の力', desc:'全ステータスがアップ', kind:'buff', grade:'normal', scope:'all' },
     ult:{ name:'やまタン8枚タン！', power:32, hits:8, target:'all' }
   },
-  { id:'p9', cls:'c-yellow', label:'I', name:'ヒカリオロチ', rank:'S', no:437, zoku:'イサマシ族', maxHp:278, slackSeikaku:'sunao',
+  { id:'p9', cls:'c-yellow', label:'I', name:'ヒカリオロチ', rank:'S', no:437, zoku:'イサマシ族', maxHp:278, baseActionTendency:{ physical:0.30, magic:0.30, guard:0.10, possess:0.30 }, slackSeikaku:'sunao',
     stats:{ chikara:149, mamori:121, youjutsu:70, subayasa:138 },
     skill:{ name:'光オーラ', desc:'となりにいるキャラのHPをだんだん回復する', neighborHeal:true, neighborHealRate:0.02 },
     tokui:'雷', jaku:'土',
@@ -1679,7 +2445,7 @@ const characterPool = [
     possess:{ name:'聖なる光', desc:'HPがどんどん回復する', kind:'buff', hot:true, hotRate:0.05 },
     ult:{ name:'閃光ドラゴンラッシュ', power:24, hits:10, target:'all' }
   },
-  { id:'p10', cls:'c-cream', label:'J', name:'クワガ大将', rank:'S', no:36, zoku:'イサマシ族', maxHp:281, slackSeikaku:'sunao',
+  { id:'p10', cls:'c-cream', label:'J', name:'クワガ大将', rank:'S', no:36, zoku:'イサマシ族', maxHp:281, baseActionTendency:{ physical:0.40, magic:0.20, guard:0.25, possess:0.15 }, slackSeikaku:'sunao',
     stats:{ chikara:144, mamori:146, youjutsu:87, subayasa:99 },
     skill:{ name:'いあつかん', desc:'敵味方全員がさぼらなくなる', noSlackAura:true },
     tokui:'風', jaku:'火',
@@ -1688,7 +2454,7 @@ const characterPool = [
     possess:{ name:'大将パワー', desc:'ちからアップ', kind:'buff', grade:'normal', scope:'single', stat:'chikara' },
     ult:{ name:'閃光地獄バサミ', power:195, target:'single' }
   },
-  { id:'p11', cls:'c-orange', label:'K', name:'しゅらコマ', rank:'S', no:323, zoku:'フシギ族', maxHp:276, slackSeikaku:'sunao',
+  { id:'p11', cls:'c-orange', label:'K', name:'しゅらコマ', rank:'S', no:323, zoku:'フシギ族', maxHp:276, baseActionTendency:{ physical:0.40, magic:0.35, guard:0.10, possess:0.15 }, slackSeikaku:'sunao',
     stats:{ chikara:91, mamori:98, youjutsu:176, subayasa:128 },
     skill:{ name:'もえるとうし', desc:'味方が気絶するとちからがアップ', chikaraOnAllyFaint:true },
     tokui:'火', jaku:'水',
@@ -1697,7 +2463,7 @@ const characterPool = [
     possess:{ name:'しゅらの力', desc:'ようじゅつ大アップ', kind:'buff', grade:'large', scope:'single', stat:'youjutsu' },
     ult:{ name:'しゅらシュシュシュ', power:170, target:'all' }
   },
-  { id:'p12', cls:'c-blue', label:'L', name:'風魔猿', rank:'S', no:83, zoku:'フシギ族', maxHp:253, slackSeikaku:'sunao',
+  { id:'p12', cls:'c-blue', label:'L', name:'風魔猿', rank:'S', no:83, zoku:'フシギ族', maxHp:253, baseActionTendency:{ physical:0.20, magic:0.45, guard:0.10, possess:0.25 }, slackSeikaku:'sunao',
     stats:{ chikara:110, mamori:89, youjutsu:181, subayasa:123 },
     skill:{ name:'閃光', desc:'一度だけ先制攻撃できる', preemptiveStrike:true },
     tokui:'雷', jaku:'土',
@@ -1706,7 +2472,7 @@ const characterPool = [
     possess:{ name:'風魔の力', desc:'すばやさ大アップ', kind:'buff', grade:'large', scope:'single', stat:'subayasa' },
     ult:{ name:'風魔ライデン', power:190, target:'single' }
   },
-  { id:'p13', cls:'c-navy', label:'M', name:'青鬼', rank:'S', no:439, zoku:'ゴーケツ族', maxHp:436, slackSeikaku:'sunao',
+  { id:'p13', cls:'c-navy', label:'M', name:'青鬼', rank:'S', no:439, zoku:'ゴーケツ族', maxHp:436, baseActionTendency:{ physical:0.25, magic:0.35, guard:0.30, possess:0.10 }, slackSeikaku:'sunao',
     stats:{ chikara:115, mamori:121, youjutsu:183, subayasa:142 },
     skill:{ name:'水あそび', desc:'自分が使う水属性のダメージがアップ(青鬼自身)', elementDamageBoost:{ element:'水', rate:0.2 } },
     tokui:'水', jaku:'雷',
@@ -1715,7 +2481,7 @@ const characterPool = [
     possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
     ult:{ name:'冷徹の金棒', power:350, target:'single' }
   },
-  { id:'p14', cls:'c-red', label:'N', name:'赤鬼', rank:'S', no:438, zoku:'ゴーケツ族', maxHp:438, slackSeikaku:'sunao',
+  { id:'p14', cls:'c-red', label:'N', name:'赤鬼', rank:'S', no:438, zoku:'ゴーケツ族', maxHp:438, baseActionTendency:{ physical:0.55, magic:0.15, guard:0.15, possess:0.15 }, slackSeikaku:'sunao',
     stats:{ chikara:200, mamori:114, youjutsu:90, subayasa:145 },
     skill:{ name:'ガードくずし', desc:'攻撃したとき敵のガードの効果を無視する(物理攻撃のみ・威力は本来の93%)', ignoreGuard:true },
     tokui:'火', jaku:'水',
@@ -1724,7 +2490,7 @@ const characterPool = [
     possess:{ name:'鬼の力', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
     ult:{ name:'怒りの金棒', power:350, target:'single' }
   },
-  { id:'p15', cls:'c-purple', label:'O', name:'マスターニャーダ', rank:'S', no:160, zoku:'プリチー族', maxHp:259, slackSeikaku:'sunao',
+  { id:'p15', cls:'c-purple', label:'O', name:'マスターニャーダ', rank:'S', no:160, zoku:'プリチー族', maxHp:259, baseActionTendency:{ physical:0.30, magic:0.30, guard:0.15, possess:0.25 }, slackSeikaku:'sunao',
     stats:{ chikara:94, mamori:116, youjutsu:159, subayasa:135 },
     skill:{ name:'ホース', desc:'敵の妖術をよけまくる', magicEvasionBonus:0.4 },
     tokui:'風', jaku:'氷',
@@ -1733,7 +2499,7 @@ const characterPool = [
     possess:{ name:'ホースの力', desc:'全ステータスアップ', kind:'buff', grade:'normal', scope:'all' },
     ult:{ name:'無限のホースパワー', power:210, target:'all' }
   },
-  { id:'p16', cls:'c-blue', label:'P', name:'百鬼姫', rank:'S', no:157, zoku:'プリチー族', maxHp:262, slackSeikaku:'sunao',
+  { id:'p16', cls:'c-blue', label:'P', name:'百鬼姫', rank:'S', no:157, zoku:'プリチー族', maxHp:262, baseActionTendency:{ physical:0.30, magic:0.30, guard:0.10, possess:0.30 }, slackSeikaku:'sunao',
     stats:{ chikara:136, mamori:105, youjutsu:135, subayasa:123 },
     skill:{ name:'のろいのおはだ', desc:'敵にとりつかれていると全ステータスアップ', allStatsUpWhileDebuffed:true },
     tokui:'氷', jaku:'火',
@@ -1742,7 +2508,7 @@ const characterPool = [
     possess:{ name:'闇の呪い', desc:'全ステータス大ダウン', kind:'debuff', grade:'large', scope:'all' },
     ult:{ name:'ときめき☆百鬼夜行', power:140, target:'all', debuff:'all-stats-down', desc:'全体攻撃＋全ステータスダウン' }
   },
-  { id:'p17', cls:'c-teal', label:'Q', name:'絶オジイ', rank:'S', no:197, zoku:'ポカポカ族', maxHp:281, slackSeikaku:'sunao',
+  { id:'p17', cls:'c-teal', label:'Q', name:'絶オジイ', rank:'S', no:197, zoku:'ポカポカ族', maxHp:281, baseActionTendency:{ physical:0.40, magic:0.30, guard:0.15, possess:0.15 }, slackSeikaku:'sunao',
     stats:{ chikara:128, mamori:106, youjutsu:106, subayasa:124 },
     skill:{ name:'いあつかん', desc:'敵味方全員がさぼらなくなる', noSlackAura:true },
     tokui:'雷', jaku:'土',
@@ -1751,7 +2517,7 @@ const characterPool = [
     possess:{ name:'オジイの喝', desc:'ちから大アップ', kind:'buff', grade:'large', scope:'single', stat:'chikara' },
     ult:{ name:'超絶ちゃぶ台返し', power:250, target:'all', desc:'全体攻撃＋敵の必殺技をかなりキャンセルしやすい' }
   },
-  { id:'p18', cls:'c-navy', label:'R', name:'ゾロ目大明神', rank:'A', no:195, zoku:'ポカポカ族', maxHp:227, slackSeikaku:'sunao',
+  { id:'p18', cls:'c-navy', label:'R', name:'ゾロ目大明神', rank:'A', no:195, zoku:'ポカポカ族', maxHp:227, baseActionTendency:{ physical:0.45, magic:0.30, guard:0.10, possess:0.15 }, slackSeikaku:'sunao',
     stats:{ chikara:141, mamori:135, youjutsu:113, subayasa:101 },
     skill:{ name:'ギャンブラー', desc:'クリティカルがでやすいがクリティカルされやすい(30％ほど)', gambler:true },
     tokui:'水', jaku:'雷',
@@ -1760,7 +2526,7 @@ const characterPool = [
     possess:{ name:'大明神の加護', desc:'HPがだんだん回復する', kind:'buff', hot:true, hotRate:0.05 },
     ult:{ name:'必中大当たり！', power:140, target:'all' }
   },
-  { id:'p19', cls:'c-teal', label:'S', name:'ヤミまろ', rank:'S', no:242, zoku:'ウスラカゲ族', maxHp:278, slackSeikaku:'sunao',
+  { id:'p19', cls:'c-teal', label:'S', name:'ヤミまろ', rank:'S', no:242, zoku:'ウスラカゲ族', maxHp:278, baseActionTendency:{ physical:0.30, magic:0.20, guard:0.10, possess:0.40 }, slackSeikaku:'sunao',
     stats:{ chikara:107, mamori:96, youjutsu:131, subayasa:149 },
     skill:{ name:'きゅうきょくのヤミ', desc:'とりつきが必ず成功する', possessAlwaysSucceeds:true },
     tokui:'水', jaku:'雷',
@@ -1769,7 +2535,7 @@ const characterPool = [
     possess:{ name:'闇の力', desc:'HPがどんどん減ってしまう', kind:'debuff', dot:true, dotRate:0.05 },
     ult:{ name:'常闇の呪い', power:140, target:'all', debuff:'stun', desc:'全体攻撃＋行動不能' }
   },
-  { id:'p20', cls:'c-purple', label:'T', name:'女郎蜘蛛', rank:'S', no:283, zoku:'ブキミー族', maxHp:255, slackSeikaku:'sunao',
+  { id:'p20', cls:'c-purple', label:'T', name:'女郎蜘蛛', rank:'S', no:283, zoku:'ブキミー族', maxHp:255, baseActionTendency:{ physical:0.35, magic:0.30, guard:0.10, possess:0.25 }, slackSeikaku:'sunao',
     stats:{ chikara:139, mamori:102, youjutsu:104, subayasa:138 },
     skill:{ name:'大将', desc:'敵を倒すたび攻撃力大アップ', chikaraOnEnemyFaint:true },
     tokui:'土', jaku:'風',
@@ -1778,10 +2544,52 @@ const characterPool = [
     possess:{ name:'くもの糸にからめる', desc:'すばやさ大ダウン', kind:'debuff', grade:'large', scope:'single', stat:'subayasa' },
     ult:{ name:'桃色ドトンドトーン', power:290, target:'single' }
   },
+  { id:'p21', cls:'c-yellow', label:'U', name:'どんちゃん', rank:'C', no:187, zoku:'ポカポカ族', maxHp:212, baseActionTendency:{ physical:0.15, magic:0.30, guard:0.15, possess:0.40 }, slackSeikaku:'majime',
+    stats:{ chikara:57, mamori:105, youjutsu:124, subayasa:106 },
+    skill:{ name:'どんどんフィールド', desc:'敵味方全員の全ステータスをアップする', allStatsUpField:0.075 },
+    tokui:'火', jaku:'水',
+    physical:{ name:'あてみ', power:15 },
+    magic:{ name:'回復の術', power:50, element:'回復' },
+    possess:{ name:'太鼓の達人パワー', desc:'ちから超アップ', kind:'buff', grade:'super', scope:'single', stat:'chikara' },
+    ult:{ name:'どんちゃんさわぎ', power:100, target:'all' }
+  },
+  { id:'p22', cls:'c-navy', label:'V', name:'シロカベ', rank:'A', no:94, zoku:'ゴーケツ族', maxHp:285, baseActionTendency:{ physical:0.30, magic:0.15, guard:0.40, possess:0.15 }, slackSeikaku:'sunao',
+    stats:{ chikara:92, mamori:151, youjutsu:66, subayasa:100 },
+    skill:{ name:'ブロッカー', desc:'前衛に出るときガードしながら前へ出る', guardOnEnterFront:true },
+    tokui:'土', jaku:'風',
+    physical:{ name:'タックル', power:60 },
+    magic:{ name:'落石の術', power:50, element:'土' },
+    possess:{ name:'お城の力', desc:'まもりアップ', kind:'buff', grade:'normal', scope:'single', stat:'mamori' },
+    ult:{ name:'石垣おとし', power:180, target:'all' }
+  },
+  { id:'p23', cls:'c-orange', label:'W', name:'から傘魔人', rank:'A', no:175, zoku:'ポカポカ族', maxHp:263, baseActionTendency:{ physical:0.20, magic:0.25, guard:0.30, possess:0.25 }, slackSeikaku:'sunao',
+    stats:{ chikara:122, mamori:119, youjutsu:95, subayasa:81 },
+    skill:{ name:'から傘シールド', desc:'ガード中、すべての妖術をはねかえす(1.5倍のダメージで跳ね返す。乱数なし。)', magicReflect:true, magicReflectMult:1.5 },
+    tokui:'風', jaku:'土',
+    physical:{ name:'風穴あけ', power:50 },
+    magic:{ name:'落石の術', power:50, element:'土' },
+    possess:{ name:'から傘で守る', desc:'まもり大アップ', kind:'buff', grade:'large', scope:'single', stat:'mamori' },
+    ult:{ name:'から傘バリケード', power:0, target:'self', selfBuff:{ grade:'super', scope:'single', stat:'mamori' }, selfTaunt:true, desc:'まもり超アップ＋挑発バフ(自身のみ)' }
+  },
 ];
 const MAX_ROSTER = 6;
+
+// 種族ごとのイメージカラー（種族タグの色分け・陣形バッジなどに使用。トップレベルで定義し、
+// 編成画面（renderRosterPool等）とバトル本体（startBattleField内）の両方から参照できるようにする）
+const ZOKU_COLORS = {
+  'イサマシ族': '#e53935', // 赤
+  'フシギ族':   '#fbc02d', // 黄
+  'ゴーケツ族': '#fb8c00', // 橙
+  'プリチー族': '#ec407a', // 桃
+  'ポカポカ族': '#43a047', // 緑
+  'ウスラカゲ族': '#1e88e5', // 青
+  'ブキミー族': '#8e24aa', // 紫
+  'ニョロロン族': '#26c6da', // 水
+};
+
 let selectedIds = []; // 選ばれた順が、そのまま「前衛→後衛」の並びになる
 let actionSeikakuMap = {}; // charId -> 行動性格id（編成時にプレイヤーが選択）
+let equipMap = {}; // charId -> 装備id（編成時にプレイヤーが選択。装備枠は1枠）
 const DEFAULT_ACTION_SEIKAKU = 'tanki';
 
 // CPU（対戦相手）側のキャラクター。プレイヤー側と同じく6体で、前衛3体・後衛3体を編成する。
@@ -1798,14 +2606,37 @@ function pickEnemyPool(excludeIds){
 
 const rosterSlotsEl = document.getElementById('rosterSlots');
 const rosterPoolEl = document.getElementById('rosterPool');
+const rosterListEl = document.getElementById('rosterList');
+const viewModeSwitchEl = document.getElementById('viewModeSwitch');
 const selectedCountEl = document.getElementById('selectedCount');
 const toBattleBtn = document.getElementById('toBattleBtn');
 
+// サークルスロットの配置半径
+const ROSTER_CIRCLE = {
+  centerX: 200, centerY: 200,
+  radius: 130, // 6体全員をこの半径の円周上に等間隔で配置する
+};
+
+// スロット番号(0〜5)から、円周上の(x, y)座標を計算する。
+// 6体を1つの円の上に、真上を起点に60度おきで均等配置する。
+function getRosterSlotPosition(i){
+  const angleDeg = -90 + i * 60;
+  const angleRad = angleDeg * Math.PI / 180;
+  return {
+    x: ROSTER_CIRCLE.centerX + ROSTER_CIRCLE.radius * Math.cos(angleRad),
+    y: ROSTER_CIRCLE.centerY + ROSTER_CIRCLE.radius * Math.sin(angleRad),
+  };
+}
+
 function renderRosterSlots(){
-  rosterSlotsEl.innerHTML = '';
+  // 中心のガイドリングは残し、スロットだけ作り直す
+  rosterSlotsEl.querySelectorAll('.roster-slot-wrap').forEach(el => el.remove());
   for(let i=0;i<MAX_ROSTER;i++){
     const wrapEl = document.createElement('div');
     wrapEl.className = 'roster-slot-wrap';
+    const pos = getRosterSlotPosition(i);
+    wrapEl.style.left = pos.x + 'px';
+    wrapEl.style.top = pos.y + 'px';
     const slotEl = document.createElement('div');
     const charId = selectedIds[i];
     if(charId){
@@ -1828,6 +2659,17 @@ function renderRosterSlots(){
         actionSeikakuMap[charId] = e.target.value;
       });
       wrapEl.appendChild(select);
+
+      // 装備セレクト（装備枠は1枠。種類ごとにoptgroupでまとめる）
+      const currentEquip = equipMap[charId] || 'none';
+      const equipSelect = document.createElement('select');
+      equipSelect.className = 'equip-select';
+      equipSelect.innerHTML = buildEquipmentOptionsHtml(currentEquip);
+      equipSelect.addEventListener('click', (e) => e.stopPropagation());
+      equipSelect.addEventListener('change', (e) => {
+        equipMap[charId] = e.target.value;
+      });
+      wrapEl.appendChild(equipSelect);
     } else {
       slotEl.className = 'roster-slot';
       slotEl.innerHTML = `<div class="placeholder">${i+1}</div>`;
@@ -1835,11 +2677,96 @@ function renderRosterSlots(){
     }
     rosterSlotsEl.appendChild(wrapEl);
   }
+  renderRosterZokuBridges();
+  // 円の下端に、実際に描画された一番下のスロット（トークン＋バッジ＋行動性格セレクト込み）が
+  // どこまではみ出るかを実測し、その分だけコンテナの高さを確保する。
+  // これにより、固定値のズレやレイアウト崩れがあっても下のカード一覧と重ならないようにする。
+  requestAnimationFrame(() => {
+    let maxBottom = 0;
+    rosterSlotsEl.querySelectorAll('.roster-slot-wrap').forEach(el => {
+      const bottom = el.offsetTop + el.offsetHeight;
+      if(bottom > maxBottom) maxBottom = bottom;
+    });
+    if(maxBottom > 0){
+      rosterSlotsEl.style.height = (maxBottom + 24) + 'px'; // 余白24pxを追加
+    }
+  });
+}
+
+// サークルスロット上で、同じ種族のキャラが隣り合って編成された時に、
+// そのキャラ同士の間をその種族のイメージカラーの「橋」（線）でつなぐ。
+// 円周上で物理的に隣接しているスロット同士（i と i+1、末尾5→0も含めて円形に一周）を対象にする。
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function renderRosterZokuBridges(){
+  const svg = document.getElementById('rosterZokuBridges');
+  if(!svg) return;
+  svg.innerHTML = '';
+  for(let i = 0; i < MAX_ROSTER; i++){
+    const j = (i + 1) % MAX_ROSTER;
+    const idA = selectedIds[i];
+    const idB = selectedIds[j];
+    if(!idA || !idB) continue;
+    const cA = characterPool.find(x => x.id === idA);
+    const cB = characterPool.find(x => x.id === idB);
+    if(!cA || !cB || !cA.zoku || cA.zoku !== cB.zoku) continue;
+    const color = ZOKU_COLORS[cA.zoku];
+    if(!color) continue;
+    const posA = getRosterSlotPosition(i);
+    const posB = getRosterSlotPosition(j);
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', posA.x);
+    line.setAttribute('y1', posA.y);
+    line.setAttribute('x2', posB.x);
+    line.setAttribute('y2', posB.y);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '7');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('opacity', '0.85');
+    svg.appendChild(line);
+  }
+}
+
+// キャラクター一覧の並び順。追加順(characterPool定義順)を基準に、種族順・ランク順・名前順に並び替えられる。
+let rosterSortMode = 'added';
+const RANK_ORDER = { S:0, A:1, B:2, C:3, D:4, E:5 };
+// 種族順で使う並び順（五十音順ではなく、この順序で固定する）
+const ZOKU_ORDER_LIST = ['イサマシ族', 'フシギ族', 'ゴーケツ族', 'プリチー族', 'ポカポカ族', 'ウスラカゲ族', 'ブキミー族', 'ニョロロン族'];
+function getZokuOrderIndex(zoku){
+  const idx = ZOKU_ORDER_LIST.indexOf(zoku);
+  return idx === -1 ? ZOKU_ORDER_LIST.length : idx; // リストにない種族は末尾へ
+}
+
+// 現在の並び順設定に従って characterPool を並び替えた配列を返す（元の配列は変更しない）。
+function getSortedCharacterPool(){
+  const list = characterPool.slice();
+  switch(rosterSortMode){
+    case 'zoku':
+      // 種族を指定の順序（ZOKU_ORDER_LIST）でグループ化し、同じ種族内はNo.順
+      list.sort((a, b) => getZokuOrderIndex(a.zoku) - getZokuOrderIndex(b.zoku) || (a.no ?? 0) - (b.no ?? 0));
+      break;
+    case 'rank':
+      // ランクが高い(S)順。同ランク内は種族順（ZOKU_ORDER_LIST）、さらにその中はNo.順
+      list.sort((a, b) =>
+        (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99) ||
+        getZokuOrderIndex(a.zoku) - getZokuOrderIndex(b.zoku) ||
+        (a.no ?? 0) - (b.no ?? 0)
+      );
+      break;
+    case 'name':
+      // キャラ名の五十音順
+      list.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      break;
+    case 'added':
+    default:
+      // 追加順（characterPool定義順のまま）
+      break;
+  }
+  return list;
 }
 
 function renderRosterPool(){
   rosterPoolEl.innerHTML = '';
-  characterPool.forEach(c => {
+  getSortedCharacterPool().forEach(c => {
     const isSelected = selectedIds.includes(c.id);
     const card = document.createElement('div');
     card.className = 'roster-card' + (isSelected ? ' selected' : '');
@@ -1847,7 +2774,7 @@ function renderRosterPool(){
       <div class="token ${c.cls}">${c.label}</div>
       <div class="name">${c.name}</div>
       <div class="rank-badge rank-${c.rank}">${c.rank}</div>
-      ${c.no ? `<div class="stat">No.${c.no}${c.zoku ? ' / ' + c.zoku : ''}</div>` : ''}
+      ${c.no ? `<div class="stat">No.${c.no}${c.zoku ? ' / <span style="color:' + (ZOKU_COLORS[c.zoku]||'inherit') + ';font-weight:600">' + c.zoku + '</span>' : ''}</div>` : ''}
       <div class="stat">ちから ${c.stats.chikara} / まもり ${c.stats.mamori}</div>
       <div class="stat">ようじゅつ ${c.stats.youjutsu} / すばやさ ${c.stats.subayasa}</div>
     `;
@@ -1856,24 +2783,69 @@ function renderRosterPool(){
   });
 }
 
+function renderRosterList(){
+  rosterListEl.innerHTML = '';
+  getSortedCharacterPool().forEach(c => {
+    const isSelected = selectedIds.includes(c.id);
+    const row = document.createElement('div');
+    row.className = 'roster-list-row' + (isSelected ? ' selected' : '');
+    row.innerHTML = `
+      <div class="token ${c.cls}">${c.label}</div>
+      <div class="name">${c.name}</div>
+      <div class="rank-badge rank-${c.rank}">${c.rank}</div>
+      ${c.no ? `<div class="stat">No.${c.no}${c.zoku ? ' / <span style="color:' + (ZOKU_COLORS[c.zoku]||'inherit') + ';font-weight:600">' + c.zoku + '</span>' : ''}</div>` : ''}
+      <div class="stat">ちから ${c.stats.chikara} / まもり ${c.stats.mamori}</div>
+      <div class="stat">ようじゅつ ${c.stats.youjutsu} / すばやさ ${c.stats.subayasa}</div>
+    `;
+    row.addEventListener('click', () => toggleCharacter(c.id));
+    rosterListEl.appendChild(row);
+  });
+}
+
+// 並び順セレクトの変更を反映
+const rosterSortSelectEl = document.getElementById('rosterSortSelect');
+rosterSortSelectEl.addEventListener('change', (e) => {
+  rosterSortMode = e.target.value;
+  renderRosterPool();
+  renderRosterList();
+});
+
+// カード表示⇔リスト表示の切り替えスイッチ
+let rosterViewMode = 'card';
+function setRosterViewMode(mode){
+  rosterViewMode = mode;
+  rosterPoolEl.style.display = mode === 'card' ? 'grid' : 'none';
+  rosterListEl.style.display = mode === 'list' ? 'flex' : 'none';
+  viewModeSwitchEl.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === mode);
+  });
+}
+viewModeSwitchEl.querySelectorAll('.view-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setRosterViewMode(btn.dataset.view));
+});
+
 function toggleCharacter(id){
   const idx = selectedIds.indexOf(id);
   if(idx >= 0){
     selectedIds.splice(idx, 1);
     delete actionSeikakuMap[id];
+    delete equipMap[id];
   } else {
     if(selectedIds.length >= MAX_ROSTER) return; // 満員
     selectedIds.push(id);
     if(!actionSeikakuMap[id]) actionSeikakuMap[id] = DEFAULT_ACTION_SEIKAKU;
+    if(!equipMap[id]) equipMap[id] = 'none';
   }
   renderRosterSlots();
   renderRosterPool();
+  renderRosterList();
   selectedCountEl.textContent = selectedIds.length;
   toBattleBtn.disabled = selectedIds.length < 3; // 前衛3体分は最低限必要
 }
 
 renderRosterSlots();
 renderRosterPool();
+renderRosterList();
 updateModeLabel();
 
 /* ============================================================
@@ -1900,10 +2872,12 @@ function startBattleField(){
     const baseStats = c.stats || { chikara:60, mamori:60, youjutsu:60, subayasa:60 };
     const baseHp = c.maxHp || 100;
     const actionSeikakuId = actionSeikakuMap[c.id] || DEFAULT_ACTION_SEIKAKU;
-    const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, actionSeikakuId);
+    const { stats: personalityStats, hp } = applyPersonalityBonuses(baseStats, baseHp, actionSeikakuId);
+    const equipmentId = equipMap[c.id] || 'none';
+    const stats = applyEquipmentBonuses(personalityStats, equipmentId);
     return {
-      id:i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
-      slackSeikaku: getSlackPersonality(c.slackSeikaku), actionSeikaku: getActionPersonality(actionSeikakuId)
+      id:i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', zoku:c.zoku || null, stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
+      slackSeikaku: getSlackPersonality(c.slackSeikaku), actionSeikaku: getActionPersonality(actionSeikakuId), charDef: c, equipment: getEquipment(equipmentId)
     };
   });
 
@@ -1916,8 +2890,8 @@ function startBattleField(){
     const enemyActionSeikakuId = ACTION_PERSONALITIES[Math.floor(Math.random() * ACTION_PERSONALITIES.length)].id;
     const { stats, hp } = applyPersonalityBonuses(baseStats, baseHp, enemyActionSeikakuId);
     return {
-      id:'e' + i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
-      slackSeikaku: getSlackPersonality(c.slackSeikaku || 'sunao'), actionSeikaku: getActionPersonality(enemyActionSeikakuId)
+      id:'e' + i, cls:c.cls, label:c.label, name:c.name, hp, maxHp:hp, ult:100 /* ←検証用：最初から必殺技ゲージMAX。元に戻す時は 0 に */, rank:c.rank || 'C', zoku:c.zoku || null, stats, possessSkill:c.possess || null, skill:c.skill || null, tokui:c.tokui || null, jaku:c.jaku || null, physicalSkill:c.physical || null, magicSkill:c.magic || null, ultSkill:c.ult || null,
+      slackSeikaku: getSlackPersonality(c.slackSeikaku || 'sunao'), actionSeikaku: getActionPersonality(enemyActionSeikakuId), charDef: c
     };
   });
 
@@ -1976,6 +2950,11 @@ function startBattleField(){
     enemyElements[c.id] = el;
   });
 
+  // 初期表示時点で「陣」が発動しているキャラがいればインジケーターを表示する
+  refreshAllZokuJinIndicators();
+  // 戦闘開始時点ですでに発動している「陣」があれば、バナーで知らせる
+  checkZokuJinActivations();
+
   // ============================================================
   // とりつき（バフ・デバフ）倍率テーブル
   //   バフ  : 味方に対して行う良いとりつき（ステータス上昇）
@@ -2003,10 +2982,12 @@ function startBattleField(){
   //   scope : 'single'（1ステータスのみ） | 'all'（全ステータス同時）
   //   stat  : scope==='single' のとき対象ステータス名（chikara/mamori/youjutsu/subayasa）
   //   duration: 効果が続くターン数（自分の行動回数ベース、省略時は3）
-  function applyPossessEffect(target, { kind, grade, scope, stat, duration, name }){
+  function applyPossessEffect(target, { kind, grade, scope, stat, duration, name, powerMult }){
     const table = kind === 'buff' ? BUFF_RATES : DEBUFF_RATES;
-    const rate = table[grade] ? table[grade][scope] : null;
+    let rate = table[grade] ? table[grade][scope] : null;
     if(rate == null) return null; // その組み合わせは定義されていない
+    // 「ブキミーの陣」：発動側の陣形が揃っているほど、とりつき効果の威力（上げ幅／下げ幅）がアップ
+    if(powerMult) rate *= powerMult;
     if(duration == null) duration = kind === 'buff' ? 5 : 3;
     if(!target.possessEffects) target.possessEffects = [];
     const effect = { kind, grade, scope, stat: scope === 'single' ? stat : null, rate, duration, name };
@@ -2024,9 +3005,16 @@ function startBattleField(){
     return effect;
   }
 
-  // 対象に「挑発」効果（常に狙われる）がかかっているかどうか
+  // 対象に「挑発」効果（常に狙われる）がかかっているか（possessによる一時効果、または挑発魂）
   function hasTaunt(c){
-    return !!(c.possessEffects && c.possessEffects.some(e => e.taunt));
+    if(c.possessEffects && c.possessEffects.some(e => e.taunt)) return true;
+    if(hasEquipEffect(c, 'taunt')) return true;
+    return false;
+  }
+
+  // 「隠密魂」を装備しているかどうか（狙われなくなる）
+  function hasStealth(c){
+    return hasEquipEffect(c, 'stealth');
   }
 
   // 「いやしのふんいき」等、時間経過でじわじわHPが回復するバフ効果を付与する。
@@ -2039,8 +3027,10 @@ function startBattleField(){
   }
 
   // 「闇の力」等、時間経過でじわじわHPが減っていくデバフ効果を付与する（デバフなのでずっと解けない）。
-  function applyDotEffect(target, { name, rate = 0.05 }){
+  function applyDotEffect(target, { name, rate = 0.05, powerMult }){
     if(!target.possessEffects) target.possessEffects = [];
+    // 「ブキミーの陣」：発動側の陣形が揃っているほど、継続ダメージの威力がアップ
+    if(powerMult) rate *= powerMult;
     const effect = { kind: 'debuff', grade: null, scope: null, stat: null, rate: 0, duration: null, name, dot: true, dotRate: rate };
     target.possessEffects.push(effect);
     updateAuraEffect(target);
@@ -2060,18 +3050,37 @@ function startBattleField(){
     return !!(c.possessEffects && c.possessEffects.some(e => e.stun));
   }
 
-  // 通常攻撃・妖術攻撃の対象を選ぶ。挑発中のキャラがいれば必ずそちらが狙われる。
-  // 挑発がいない場合、「ねらう」でピンが刺さっている敵がいればそれを優先して狙う。
+  // 対象が何らかの「デバフ」を受けているかどうか（ステータスダウン・行動不能・継続ダメージ等すべて含む）
+  function hasDebuffEffect(c){
+    return !!(c.possessEffects && c.possessEffects.some(e => e.kind === 'debuff'));
+  }
+
+  // 通常攻撃・妖術攻撃の対象を選ぶ。優先順位は次の通り：
+  //   1. 挑発中のキャラ（possessの挑発効果、または「挑発魂」） … 必ずそちらが狙われる
+  //   2. 「ねらう」で刺したピンの対象（ただし「隠密魂」持ちは対象から除外される。ピンよりやや優先）
+  //   3. 上記がなければ、隠密魂持ちを除いた候補からランダム
+  //   4. 隠密魂持ちしか残っていない場合（前衛が全員隠密魂持ちなど）はランダムに狙われる
   function pickAttackTarget(candidates){
     const alive = candidates.filter(c => c.alive);
     if(alive.length === 0) return null;
+
     const taunting = alive.filter(hasTaunt);
     if(taunting.length > 0){
       return taunting[Math.floor(Math.random() * taunting.length)];
     }
+
+    // 隠密魂持ちを除いた候補（通常はこちらから選ぶ）
+    const nonStealth = alive.filter(c => !hasStealth(c));
+
     if(typeof pinnedTarget !== 'undefined' && pinnedTarget && pinnedTarget.alive && alive.includes(pinnedTarget)){
-      return pinnedTarget;
+      // ピンが刺さっていても、その対象が隠密魂持ちなら無効（隠密魂がピンよりやや優先）
+      if(!hasStealth(pinnedTarget)) return pinnedTarget;
     }
+
+    if(nonStealth.length > 0){
+      return nonStealth[Math.floor(Math.random() * nonStealth.length)];
+    }
+    // 全員が隠密魂持ちの場合は、隠密を無視してランダムに選ぶ
     return alive[Math.floor(Math.random() * alive.length)];
   }
 
@@ -2131,6 +3140,12 @@ function startBattleField(){
     const hasBuff = effects.some(e => e.kind === 'buff');
     el.classList.toggle('aura-debuff', hasDebuff);
     el.classList.toggle('aura-buff', hasBuff && !hasDebuff);
+    // デバフの有無によって必殺技ゲージの色（紫）も連動して切り替える
+    updateUltGauge(c);
+    // 必殺技が使用可能かどうかの見た目（発光枠など）も、デバフ状態の変化に合わせて更新する
+    if(typeof refreshUltReadyHighlights === 'function') refreshUltReadyHighlights();
+    // おはらいで選択可能かどうかの見た目も、デバフ状態の変化に合わせて更新する
+    if(typeof refreshOharaiSelectableHighlights === 'function') refreshOharaiSelectableHighlights();
   }
 
   // 「におうだち」等、前衛の真ん中（前2）にいる時だけ発動するスキルの判定。
@@ -2140,11 +3155,71 @@ function startBattleField(){
     return arr[1] === c && c.alive;
   }
 
+  // ============================================================
+  // 種族の陣（同種族の妖怪を前衛で隣り合わせに配置した時のステータス上昇）
+  //   ・前衛3体（隊列の先頭3体）で、同じ種族が隣り合っている数によって発動する
+  //   ・2体隣り合わせ → 対象ステータスが約1.1倍（10%アップ）
+  //   ・3体隣り合わせ → 対象ステータスが約1.2倍（20%アップ）
+  //   ・種族によって上昇する対象が異なる（下記 ZOKU_JIN を参照）
+  // ============================================================
+  const ZOKU_JIN = {
+    'イサマシ族': { stat:'chikara',       label:'イサマシの陣', desc:'ちからアップ！' }, // ちから（物理攻撃力）
+    'フシギ族':   { stat:'youjutsu',      label:'フシギの陣',   desc:'ようじゅつアップ！' },   // ようりょく（妖術の威力）
+    'ゴーケツ族': { stat:'mamori',        label:'ゴーケツの陣', desc:'まもりアップ！' }, // まもり（被ダメージ軽減）
+    'プリチー族': { stat:'subayasa',      label:'プリチーの陣', desc:'すばやさアップ！' }, // すばやさ（行動順・回避率）
+    'ポカポカ族': { stat:'heal',          label:'ポカポカの陣', desc:'かいふくアップ！' }, // 回復量（HP回復の効き目）
+    'ウスラカゲ族': { stat:'possessRate', label:'ウスラカゲの陣', desc:'とりつきやすさアップ！' }, // とりつき成功率
+    'ブキミー族': { stat:'possessPower',  label:'ブキミーの陣', desc:'とりつきこうかアップ！' }, // とりつきの威力
+    'ニョロロン族': { stat:'possessResist', label:'ニョロロンの陣', desc:'とりつきぼうぎょアップ！' }, // とりつき耐性
+  };
+
+  // 指定キャラが現在「陣」の対象になっているかどうかを判定し、
+  // { stat, mult, label, count } を返す（対象外なら null）。
+  // 前衛（隊列の先頭3体）の中で、自分と隣接する位置（配列インデックスが連続）に
+  // 生存中かつ同じ種族のキャラがいる数を左右にたどって数える。
+  function getZokuJinMultiplier(c){
+    if(!c || !c.alive || !c.zoku) return null;
+    const info = ZOKU_JIN[c.zoku];
+    if(!info) return null;
+    const arr = c.side === 'enemy' ? enemyParty : party;
+    const front = arr.slice(0, 3);
+    const idx = front.indexOf(c);
+    if(idx === -1) return null; // 後衛にいる間は発動しない
+    let left = idx, right = idx;
+    while(left - 1 >= 0 && front[left - 1] && front[left - 1].alive && front[left - 1].zoku === c.zoku) left--;
+    while(right + 1 <= 2 && front[right + 1] && front[right + 1].alive && front[right + 1].zoku === c.zoku) right++;
+    const count = right - left + 1;
+    if(count >= 3) return { stat: info.stat, mult: 1.2, label: info.label, count: 3 };
+    if(count >= 2) return { stat: info.stat, mult: 1.1, label: info.label, count: 2 };
+    return null;
+  }
+
+  // 「とりつきの威力」の陣（ブキミーの陣）による倍率だけを取り出すヘルパー
+  // （applyPossessEffect / applyDotEffect でとりつき効果の強さを底上げするのに使う）
+  function getZokuPossessPowerMult(actor){
+    const zj = getZokuJinMultiplier(actor);
+    return (zj && zj.stat === 'possessPower') ? zj.mult : null;
+  }
+
   // ベースのステータスに、現在有効なとりつき効果をすべて乗算して実効値を算出する。
   // 同じステータスに複数の効果がかかっている場合は倍率を積み重ねる（乗算合成）。
   function getEffectiveStats(c){
     const base = c.stats;
     const result = { chikara: base.chikara, mamori: base.mamori, youjutsu: base.youjutsu, subayasa: base.subayasa };
+    // 「〇〇の陣」：前衛で同じ種族が隣り合っている時、対象ステータスが1.1倍（2体）／1.2倍（3体）になる
+    const zokuJin = getZokuJinMultiplier(c);
+    if(zokuJin && result[zokuJin.stat] !== undefined){
+      result[zokuJin.stat] *= zokuJin.mult;
+    }
+    // 「どんどんフィールド」：場に発動者がいる間、敵味方全員の全ステータスがアップする
+    const fieldBoostRate = getAllStatsFieldBoostRate();
+    if(fieldBoostRate > 0){
+      const fieldMult = 1 + fieldBoostRate;
+      result.chikara *= fieldMult;
+      result.mamori *= fieldMult;
+      result.youjutsu *= fieldMult;
+      result.subayasa *= fieldMult;
+    }
     // 「におうだち」：前衛の真ん中にいる時だけまもりアップ（通常アップと同じ上げ幅：+10%）
     if(c.skill && c.skill.middleMamoriBoost && isInMiddleFrontPosition(c)){
       result.mamori *= 1.10;
@@ -2199,7 +3274,13 @@ function startBattleField(){
   function calcPossessSuccessChance(actor, target){
     const atk = getEffectiveStats(actor).youjutsu;
     const def = getEffectiveStats(target).subayasa;
-    const chance = 0.75 + (atk - def) / 500;
+    let chance = 0.75 + (atk - def) / 500;
+    // 「ウスラカゲの陣」：発動側の陣形が揃っているほど、とりつきの成功率がアップ
+    const actorZokuJin = getZokuJinMultiplier(actor);
+    if(actorZokuJin && actorZokuJin.stat === 'possessRate') chance *= actorZokuJin.mult;
+    // 「ニョロロンの陣」：対象側の陣形が揃っているほど、とりつきを受けにくくなる（耐性）
+    const targetZokuJin = getZokuJinMultiplier(target);
+    if(targetZokuJin && targetZokuJin.stat === 'possessResist') chance /= targetZokuJin.mult;
     return Math.max(0.3, Math.min(0.95, chance));
   }
 
@@ -2214,7 +3295,10 @@ function startBattleField(){
   // 回復系の妖術による回復量 = ようじゅつ/2 + 技の威力/2　(±10%のランダムなブレ、まもりは関係しない)
   function calcMagicHeal(caster, power){
     const stats = getEffectiveStats(caster);
-    const base = stats.youjutsu / 2 + power / 2;
+    let base = stats.youjutsu / 2 + power / 2;
+    // 「ポカポカの陣」：陣形が揃っているほど、回復量そのものがアップする
+    const zokuJin = getZokuJinMultiplier(caster);
+    if(zokuJin && zokuJin.stat === 'heal') base *= zokuJin.mult;
     const variance = 1 + (Math.random() * 0.2 - 0.1); // ±10%
     return Math.max(1, Math.round(base * variance));
   }
@@ -2307,12 +3391,17 @@ function startBattleField(){
     return { hit:true, damage, critical:crit.critical, critMultiplier:crit.multiplier, attrKind:attr.kind };
   }
 
+  // 「複数回攻撃」のヒット間隔や、ターンとターンの間隔など、
+  // キャラクターの行動全体のテンポをまとめて調整するための倍率。
+  // 1 で標準速度、0.75 なら通常の75%の速度（=約1.33倍長い間隔）で行動する。
+  const ACTION_SPEED_SCALE = 0.75;
+
   // 1回の行動で複数回攻撃する技（例：ブシニャンの「閃光ぎり」3回攻撃）の処理。
   // ヒットごとに毎回独立で回避判定・クリティカル判定・属性判定を行う。
   // 対象が途中で倒れた場合は、そこで残りの攻撃を打ち切る。
   // 各ヒットの間には少し間隔（HIT_INTERVAL_MS）を空けて演出し、全ヒット終了後に onDone を呼ぶ。
   const ATTACK_KIND_LABEL = { physical:'物理攻撃', magic:'妖術攻撃' };
-  const HIT_INTERVAL_MS = 140; // 複数回攻撃の1発ごとの間隔
+  const HIT_INTERVAL_MS = Math.round(140 / ACTION_SPEED_SCALE); // 複数回攻撃の1発ごとの間隔
   function performMultiHitAttack(actor, target, kind, power, element, hits, label, onDone){
     const actionLabel = label || ATTACK_KIND_LABEL[kind] || '攻撃';
     let totalDamage = 0;
@@ -2338,6 +3427,16 @@ function startBattleField(){
       if(!result.hit){
         logLine(`${actor.name} の${actionLabel}！(${i+1}/${hits}発目) → ${target.name} はかわした！`, 'miss');
         showDamagePopup(target, 'MISS', 'miss');
+      } else if(kind === 'magic' && target.guarding && target.skill && target.skill.magicReflect){
+        // 「から傘シールド」等：ガード中に受けた妖術を、そのまま反射してダメージを与える（威力は反射倍率をかけた分、乱数の上乗せなし）
+        const reflectDamage = Math.max(1, Math.round(result.damage * target.skill.magicReflectMult));
+        const dealt = applyDamageTo(actor, reflectDamage, true);
+        totalDamage += 0;
+        hitCount++;
+        showActionBubble(target, 'はねかえす！');
+        showDamagePopup(actor, String(dealt));
+        const hitTag = hits > 1 ? `(${i+1}/${hits}発目) ` : '';
+        logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} は${target.skill.name}で妖術をはねかえした！ ${actor.name} に ${dealt} ダメージ！`);
       } else {
         const ignoreGuard = kind === 'physical' && actor.skill && actor.skill.ignoreGuard;
         const dmg = applyDamageTo(target, result.damage, ignoreGuard);
@@ -2364,7 +3463,7 @@ function startBattleField(){
         logLine(`${actor.name} の${actionLabel}！${hitTag}→ ${target.name} に ${dmg} ダメージ！${critTag}${attrTag}${guardTag}`, result.critical ? 'critical' : undefined);
       }
       i++;
-      if(i >= hits || !target.alive){
+      if(i >= hits || !target.alive || !actor.alive){
         finish();
       } else {
         setTimeout(nextHit, HIT_INTERVAL_MS);
@@ -2393,6 +3492,9 @@ function startBattleField(){
       rect.setAttribute('y', 24 - (24 * c.ult / 100));
       rect.setAttribute('height', 24 * c.ult / 100);
     }
+    // デバフがかかっている間は必殺技ゲージを紫色にし、満タンでも使用不可であることを視覚的に示す
+    const gaugeEl = el.querySelector('.ultgauge');
+    if(gaugeEl) gaugeEl.classList.toggle('debuffed', hasDebuffEffect(c));
   }
 
   // 必殺技メーターは最初は空(0)から始まり、「行動」のたびに少しずつ溜まっていく。
@@ -2489,7 +3591,24 @@ function startBattleField(){
   // CPU側も味方と同じ周回順（前衛左→中央→右→後衛右→中央→左→…）でサークルを回す
   const ENEMY_LOOP_ORDER = [0, 1, 2, 5, 4, 3];
 
+  // 「ブロッカー魂」／innateスキル「ブロッカー」：後衛から前衛に出てきたキャラを自動的にガード状態にする。
+  // 回転前後の前衛（インデックス0〜2）を比較し、新しく前衛入りしたキャラだけに適用する。
+  function applyBlockerSoulOnRotate(arr, beforeFront){
+    for(let i=0;i<3;i++){
+      const c = arr[i];
+      if(!c || beforeFront.includes(c)) continue;
+      if(hasEquipEffect(c, 'guardOnEnterFront')){
+        c.guarding = true;
+        logLine(`${c.name} の${c.equipment.name}！ → ガード状態で前に出た！`);
+      } else if(c.skill && c.skill.guardOnEnterFront){
+        c.guarding = true;
+        logLine(`${c.name} の${c.skill.name}！ → ガード状態で前に出た！`);
+      }
+    }
+  }
+
   function rotateEnemyParty(dir){
+    const beforeFront = ENEMY_LOOP_ORDER.slice(0, 3).map(idx => enemyParty[idx]);
     const ring = ENEMY_LOOP_ORDER.map(idx => enemyParty[idx]);
     if(dir > 0){
       const last = ring.pop();
@@ -2499,7 +3618,11 @@ function startBattleField(){
       ring.push(first);
     }
     ENEMY_LOOP_ORDER.forEach((idx, i) => { enemyParty[idx] = ring[i]; });
+    applyBlockerSoulOnRotate(enemyParty, beforeFront);
     renderEnemy();
+    // 前衛の並びが変わったので、種族の「陣」インジケーターも更新する
+    refreshAllZokuJinIndicators();
+    checkZokuJinActivations();
   }
 
   // 敵の前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を入れ替える。
@@ -2676,6 +3799,7 @@ function startBattleField(){
   }
 
   function rotateParty(dir){
+    const beforeFront = LOOP_ORDER.slice(0, 3).map(idx => party[idx]);
     const ring = LOOP_ORDER.map(idx => party[idx]);
     if(dir > 0){
       const last = ring.pop();
@@ -2685,7 +3809,13 @@ function startBattleField(){
       ring.push(first);
     }
     LOOP_ORDER.forEach((idx, i) => { party[idx] = ring[i]; });
+    applyBlockerSoulOnRotate(party, beforeFront);
     render();
+    // 前衛の並びが変わったので、種族の「陣」インジケーターも更新する
+    refreshAllZokuJinIndicators();
+    checkZokuJinActivations();
+    // 前衛／後衛の並びが変わったので、おはらいで選択できるキャラの見た目も更新する
+    if(typeof refreshOharaiSelectableHighlights === 'function') refreshOharaiSelectableHighlights();
   }
 
   // 前衛3体が全員気絶した場合、後衛に生存者がいれば強制的に前衛と後衛を入れ替える。
@@ -2722,14 +3852,28 @@ function startBattleField(){
     stepOnce();
   }
 
+  // わざ・ねらう・おはらいの各選択/効果モード中はサークル回転（前衛↔後衛の入れ替え操作）を無効化する
+  function isCircleRotationLocked(){
+    if(typeof ultSelectMode !== 'undefined' && ultSelectMode) return true;
+    if(typeof oharaiSelectMode !== 'undefined' && oharaiSelectMode) return true;
+    if(typeof nerauMode !== 'undefined' && nerauMode) return true;
+    const ultOv = document.getElementById('ultOverlay');
+    if(ultOv && ultOv.classList.contains('active')) return true;
+    const oharaiOv = document.getElementById('oharaiOverlay');
+    if(oharaiOv && oharaiOv.classList.contains('active')) return true;
+    return false;
+  }
+
   function pointerDown(e){
     if(phase === 'cooldown') return; // クールタイム中は操作不可
+    if(isCircleRotationLocked()) return; // わざ・ねらう・おはらい選択中は操作不可
     dragging = true;
     startX = (e.touches ? e.touches[0].clientX : e.clientX);
     if(phase !== 'dragging') enterDraggingPhase();
   }
   function pointerMove(e){
     if(!dragging || phase !== 'dragging') return;
+    if(isCircleRotationLocked()) return; // わざ・ねらう・おはらい選択中は操作不可
     const x = (e.touches ? e.touches[0].clientX : e.clientX);
     const dx = x - startX;
     if(Math.abs(dx) > THRESHOLD){
@@ -2765,7 +3909,7 @@ function startBattleField(){
   //   CPU側も6体編成で、状況に応じて自動でサークルを回し前衛を入れ替える。
   // ============================================================
   const BASIC_ATTACK_POWER = 20;
-  const TURN_INTERVAL_MS = 1600; // 1体の行動が終わってから次の行動までの間隔
+  const TURN_INTERVAL_MS = Math.round(1600 / ACTION_SPEED_SCALE); // 1体の行動が終わってから次の行動までの間隔
 
   party.forEach(c => { c.side = 'ally'; c.alive = true; c.guarding = false; });
   enemyParty.forEach(c => { c.side = 'enemy'; c.alive = true; c.guarding = false; });
@@ -2789,6 +3933,88 @@ function startBattleField(){
     if(c.alive){
       el.classList.remove('dead');
     }
+    // 隊列が変わったりHPが変動したりするたびに、「〇〇の陣」が発動中かどうかの見た目も更新する
+    updateZokuJinIndicator(c);
+  }
+
+  // 「〇〇の陣」バナーの表示キュー（複数の陣が同時に発動しても、順番に1つずつ表示する）
+  let zokuJinBannerQueue = [];
+  let zokuJinBannerPlaying = false;
+  function queueZokuJinBanner(info){
+    zokuJinBannerQueue.push(info);
+    playNextZokuJinBanner();
+  }
+  function playNextZokuJinBanner(){
+    if(zokuJinBannerPlaying || zokuJinBannerQueue.length === 0) return;
+    const banner = document.getElementById('zokuJinBanner');
+    const nameEl = document.getElementById('zokuJinName');
+    const descEl = document.getElementById('zokuJinDesc');
+    if(!banner || !nameEl || !descEl) return;
+    zokuJinBannerPlaying = true;
+    const info = zokuJinBannerQueue.shift();
+    nameEl.textContent = info.label;
+    descEl.textContent = info.desc;
+    banner.style.setProperty('--zoku-color', info.color);
+    banner.classList.remove('show');
+    void banner.offsetWidth; // 強制リフローしてアニメーションを再スタートさせる
+    banner.classList.add('show');
+    setTimeout(() => {
+      banner.classList.remove('show');
+      zokuJinBannerPlaying = false;
+      playNextZokuJinBanner();
+    }, 1600);
+  }
+
+  // 現在発動中の「陣」（陣営＋種族の組み合わせ）を記録しておき、新しく発動した瞬間だけバナーを出す
+  // ※バナー表示は味方側の陣のみが対象（敵側の陣形発動ではバナーを出さない）
+  let activeZokuJinState = {};
+  function checkZokuJinActivations(){
+    const newState = {};
+    [['ally', party], ['enemy', enemyParty]].forEach(([side, arr]) => {
+      const front = arr.slice(0, 3);
+      front.forEach(c => {
+        if(!c || !c.alive || !c.zoku) return;
+        const zj = getZokuJinMultiplier(c);
+        if(!zj) return;
+        const key = side + ':' + c.zoku;
+        if(!newState[key]) newState[key] = { zoku: c.zoku, label: zj.label, side };
+      });
+    });
+    Object.keys(newState).forEach(key => {
+      if(!activeZokuJinState[key]){
+        const info = newState[key];
+        if(info.side !== 'ally') return; // 敵側の陣形発動ではバナーを出さない
+        const jin = ZOKU_JIN[info.zoku];
+        queueZokuJinBanner({
+          label: info.label,
+          desc: (jin && jin.desc) || '',
+          color: ZOKU_COLORS[info.zoku] || '#e8c874',
+        });
+      }
+    });
+    activeZokuJinState = newState;
+  }
+
+  // 「〇〇の陣」が発動中のキャラには、種族のイメージカラーで縁取りしたリングをトークンに表示する
+  function updateZokuJinIndicator(c){
+    const el = getCharEl(c);
+    if(!el) return;
+    const token = el.querySelector('.token');
+    if(!token) return;
+    const zokuJin = getZokuJinMultiplier(c);
+    if(zokuJin && ZOKU_COLORS[c.zoku]){
+      token.style.boxShadow = `0 0 0 3px ${ZOKU_COLORS[c.zoku]}, 0 0 8px 2px ${ZOKU_COLORS[c.zoku]}`;
+      token.title = `${zokuJin.label}発動中（${zokuJin.count}体隣接・${zokuJin.mult}倍）`;
+    } else {
+      token.style.boxShadow = '';
+      token.title = '';
+    }
+  }
+
+  // 陣営全体（前衛3体＋後衛）の陣インジケーターをまとめて更新する
+  function refreshAllZokuJinIndicators(){
+    party.forEach(updateZokuJinIndicator);
+    enemyParty.forEach(updateZokuJinIndicator);
   }
 
   // 気絶の見た目（人魂化）を実際に反映する。ロジック上の alive=false とは切り離して、
@@ -2867,11 +4093,288 @@ function startBattleField(){
 
   // ---- 行動種類の吹き出し（物理攻撃以外の行動時にキャラクターの上に表示） ----
   const ACTION_LABELS = {
+    physical: '攻撃！',
     magic: '妖術攻撃！',
     guard: 'ガード！',
     possess: '取り憑き！',
     slack: 'サボり…'
   };
+  // 行動の吹き出しを見せてから実際にダメージ（や回復）を与えるまでの間（演出のタメ）。
+  // ACTION_SPEED_SCALE と連動させ、行動テンポ全体が遅くなればこの間も比例して長くなる。
+  const ACTION_BUBBLE_DELAY_MS = Math.round(450 / ACTION_SPEED_SCALE);
+  // ============================================================
+  // 妖術攻撃の技名別エフェクト演出
+  // ============================================================
+
+  // 指定した要素の中心座標を、.stage を基準にした相対座標で返す
+  function getStageRelativeCenter(el){
+    const stage = document.querySelector('.battle-screen .stage');
+    if(!stage || !el) return { x:0, y:0 };
+    const stageRect = stage.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    return {
+      x: elRect.left + elRect.width / 2 - stageRect.left,
+      y: elRect.top + elRect.height / 2 - stageRect.top,
+    };
+  }
+
+  // magic-fx-〇〇 クラスのエフェクト片を1つ生成し、渡されたアニメーションkeyframesで動かして自動削除する
+  function spawnMagicFx(cls, initialStyle, keyframes, duration, easing){
+    const layer = document.getElementById('magicFxLayer');
+    if(!layer) return null;
+    const el = document.createElement('div');
+    el.className = 'magic-fx ' + cls;
+    Object.assign(el.style, initialStyle);
+    layer.appendChild(el);
+    const anim = el.animate(keyframes, { duration, easing: easing || 'ease-in', fill:'forwards' });
+    anim.onfinish = () => { if(el.parentNode) el.parentNode.removeChild(el); };
+    return anim;
+  }
+
+  // 妖術のいりょく(power)から、演出の「派手さ」倍率を算出する。
+  // 同じ属性でも上位互換の技（いりょく80）ほど倍率が大きくなり、粒の数・大きさ・発光が強くなる。
+  // （いりょく50を基準0.7、80を基準1.2として補間。範囲外のいりょくにも対応できるよう0.6〜1.5にクランプ）
+  function getFxIntensity(power){
+    const p = typeof power === 'number' ? power : 50;
+    const raw = 0.7 + ((p - 50) / 30) * 0.5;
+    return Math.max(0.6, Math.min(1.5, raw));
+  }
+
+  // 大滝の術／水流の術：画面上から対象に向かって水の柱が勢いよく流れ落ちる（いりょくが高いほど太く、発光も強い）
+  function playWaterfallFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const w = Math.round(38 * k);
+    spawnMagicFx('magic-fx-waterfall',
+      { left:(pos.x - w/2) + 'px', top:'-160px', height:'160px', width:w+'px', opacity:'0',
+        boxShadow:`0 0 ${Math.round(18*k)}px ${Math.round(6*k)}px rgba(120,200,255,${Math.min(0.9,0.6*k)})` },
+      [
+        { top:'-160px', height:'160px', opacity:0.9 },
+        { top:(pos.y - 260) + 'px', height:'160px', opacity:1 },
+        { top:(pos.y - 90) + 'px', height:(170*k)+'px', opacity:1 },
+      ], 480, 'cubic-bezier(0.5,0,0.9,1)');
+    setTimeout(() => {
+      const sw = Math.round(90 * k), sh = Math.round(36 * k);
+      spawnMagicFx('magic-fx-splash',
+        { left:(pos.x - sw/2) + 'px', top:(pos.y - sh/2) + 'px', width:sw+'px', height:sh+'px', opacity:'0.9', transform:'scale(0.4)' },
+        [ { opacity:0.9, transform:'scale(0.4)' }, { opacity:0, transform:`scale(${1.4+0.4*k})` } ], 380, 'ease-out');
+    }, 420);
+  }
+
+  // いん石の術／落石の術：斜め上から複数の岩塊が降ってくる（いりょくが高いほど岩の数が増え、大きくなる）
+  function playRockFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const count = Math.max(3, Math.round(5 * k));
+    const size = Math.round(26 * k);
+    for(let i = 0; i < count; i++){
+      const delay = i * 90;
+      const startX = pos.x + (Math.random() * 160 - 80) - 260;
+      const startY = -80 - Math.random() * 60;
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-rock',
+          { left:startX + 'px', top:startY + 'px', width:size+'px', height:size+'px', opacity:'1',
+            boxShadow:`0 0 ${Math.round(10*k)}px ${Math.round(2*k)}px rgba(80,50,20,0.6)` },
+          [
+            { left:startX + 'px', top:startY + 'px', transform:'rotate(0deg)' },
+            { left:(pos.x - size/2 + (Math.random()*30-15)) + 'px', top:(pos.y - 10) + 'px', transform:'rotate(340deg)' },
+          ], 420 + Math.random()*80, 'cubic-bezier(0.6,0,1,1)');
+      }, delay);
+    }
+  }
+
+  // 吹雪の術／氷結の術：四方から氷の結晶が対象に収束する（いりょくが高いほど飛来する方向・数が増える）
+  function playIceFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const baseDirs = [[-140,-100],[140,-100],[-140,100],[140,100],[0,-150],[0,150]];
+    const extraDirs = [[-200,0],[200,0]];
+    const dirs = k >= 1.05 ? baseDirs.concat(extraDirs) : baseDirs;
+    const size = Math.round(16 * k);
+    dirs.forEach((d, i) => {
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-ice',
+          { left:(pos.x + d[0] - size/2) + 'px', top:(pos.y + d[1] - size/2) + 'px', width:size+'px', height:size+'px', opacity:'0.9' },
+          [
+            { left:(pos.x + d[0] - size/2) + 'px', top:(pos.y + d[1] - size/2) + 'px', opacity:0.9, transform:'rotate(0deg)' },
+            { left:(pos.x - size/2) + 'px', top:(pos.y - size/2) + 'px', opacity:1, transform:'rotate(180deg)' },
+          ], 380, 'ease-in');
+      }, i * 35);
+    });
+  }
+
+  // れんごくの術：対象の足元から炎が立ち上る（いりょくが高いほど炎の本数が増え、大きく高く上がる）
+  function playFlameFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const count = Math.max(4, Math.round(6 * k));
+    const w = Math.round(20 * k), h = Math.round(34 * k);
+    for(let i = 0; i < count; i++){
+      const offsetX = (Math.random() * 60 - 30);
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-flame',
+          { left:(pos.x + offsetX - w/2) + 'px', top:(pos.y + 30) + 'px', width:w+'px', height:h+'px', opacity:'0.95' },
+          [
+            { top:(pos.y + 30) + 'px', opacity:0.95, transform:'scale(1)' },
+            { top:(pos.y - 40 * k) + 'px', opacity:0, transform:'scale(0.4)' },
+          ], 520, 'ease-out');
+      }, i * 40);
+    }
+  }
+
+  // 嵐の術：対象の周りを風が渦巻く（いりょくが高いほど渦の輪の数が増え、大きく広がる）
+  function playWindFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const rings = Math.max(2, Math.round(3 * k));
+    const size = Math.round(70 * k);
+    for(let i = 0; i < rings; i++){
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-wind',
+          { left:(pos.x - size/2) + 'px', top:(pos.y - size/2) + 'px', width:size+'px', height:size+'px', opacity:'0', transform:'scale(0.3) rotate(0deg)' },
+          [
+            { opacity:0.9, transform:'scale(0.5) rotate(0deg)' },
+            { opacity:0.6, transform:`scale(${1.15*k}) rotate(320deg)` },
+            { opacity:0, transform:`scale(${1.4*k}) rotate(540deg)` },
+          ], 620, 'ease-out');
+      }, i * 120);
+    }
+  }
+
+  // 雷神の術：空から対象へ稲妻が落ちる（いりょくが高いほど雷が太く、発光も強い）
+  function playBoltFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const w = Math.round(10 * k);
+    spawnMagicFx('magic-fx-bolt',
+      { left:(pos.x - w/2) + 'px', top:'-120px', height:'0px', width:w+'px', opacity:'0',
+        boxShadow:`0 0 ${Math.round(20*k)}px ${Math.round(8*k)}px rgba(255,240,150,0.8)` },
+      [
+        { height:'0px', opacity:0 },
+        { height:(pos.y + 120) + 'px', opacity:1 },
+        { height:(pos.y + 120) + 'px', opacity:1 },
+        { height:(pos.y + 120) + 'px', opacity:0 },
+      ], 320, 'ease-in');
+    if(k >= 1.05){
+      // 上位互換（いりょく80）は、着弾と同時にもう一筋の細い雷を添えてより激しく見せる
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-bolt',
+          { left:(pos.x - w/2 + 16) + 'px', top:'-100px', height:'0px', width:Math.round(w*0.6)+'px', opacity:'0' },
+          [
+            { height:'0px', opacity:0 },
+            { height:(pos.y + 100) + 'px', opacity:0.8 },
+            { height:(pos.y + 100) + 'px', opacity:0 },
+          ], 260, 'ease-in');
+      }, 60);
+    }
+  }
+
+  // （未使用の技名向け）対象を暗い斬撃が斬りつける汎用エフェクト。技名に「斬」を含む場合のフォールバックとして使う
+  function playSlashFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const w = Math.round(140 * k);
+    spawnMagicFx('magic-fx-slash',
+      { left:(pos.x - w/2) + 'px', top:(pos.y - 5) + 'px', width:w+'px', opacity:'0', transform:'rotate(-30deg) scaleX(0.3)' },
+      [
+        { opacity:0, transform:'rotate(-30deg) scaleX(0.3)' },
+        { opacity:1, transform:'rotate(-30deg) scaleX(1)' },
+        { opacity:0, transform:'rotate(-30deg) scaleX(1.1)' },
+      ], 340, 'ease-out');
+  }
+
+  // 回復の術／極楽の術：柔らかい光の粒子が対象を包むように舞い上がる（いりょくが高いほど粒子が増え、より高く舞う）
+  function playLightFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const count = Math.max(4, Math.round(7 * k));
+    const size = Math.round(14 * k);
+    for(let i = 0; i < count; i++){
+      const offsetX = (Math.random() * 70 - 35);
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-light',
+          { left:(pos.x + offsetX - size/2) + 'px', top:(pos.y + 35) + 'px', width:size+'px', height:size+'px', opacity:'0' },
+          [
+            { top:(pos.y + 35) + 'px', opacity:0 },
+            { top:(pos.y - 10) + 'px', opacity:1 },
+            { top:(pos.y - 55 * k) + 'px', opacity:0 },
+          ], 700, 'ease-out');
+      }, i * 60);
+    }
+  }
+
+  // 死神の術など：対象から術者へ向かって小さな玉が飛んでいき、HPを吸い取る様子を表す（いりょくが高いほど玉の数が増える）
+  function playAbsorbFx(actorEl, targetEl, intensity){
+    const k = intensity || 1;
+    const from = getStageRelativeCenter(targetEl);
+    const to = getStageRelativeCenter(actorEl);
+    const count = Math.max(3, Math.round(4 * k));
+    const size = Math.round(14 * k);
+    for(let i = 0; i < count; i++){
+      setTimeout(() => {
+        spawnMagicFx('magic-fx-orb',
+          { left:(from.x - size/2) + 'px', top:(from.y - size/2) + 'px', width:size+'px', height:size+'px', opacity:'0.95' },
+          [
+            { left:(from.x - size/2) + 'px', top:(from.y - size/2) + 'px', opacity:0.95, offset:0 },
+            { left:((from.x + to.x) / 2 - size/2) + 'px', top:(Math.min(from.y, to.y) - 60) + 'px', opacity:1, offset:0.5 },
+            { left:(to.x - size/2) + 'px', top:(to.y - size/2) + 'px', opacity:0, offset:1 },
+          ], 520, 'ease-in-out');
+      }, i * 90);
+    }
+  }
+
+  // 未分類の妖術：対象を中心に魔法陣風のバーストが弾ける汎用エフェクト（いりょくが高いほど大きく広がる）
+  function playBurstFx(targetEl, intensity){
+    const k = intensity || 1;
+    const pos = getStageRelativeCenter(targetEl);
+    const size = Math.round(90 * k);
+    spawnMagicFx('magic-fx-burst',
+      { left:(pos.x - size/2) + 'px', top:(pos.y - size/2) + 'px', width:size+'px', height:size+'px', opacity:'0', transform:'scale(0.3) rotate(0deg)' },
+      [
+        { opacity:0.9, transform:'scale(0.3) rotate(0deg)' },
+        { opacity:0.7, transform:`scale(${1.1*k}) rotate(180deg)` },
+        { opacity:0, transform:`scale(${1.3*k}) rotate(320deg)` },
+      ], 480, 'ease-out');
+  }
+
+  // 技名（または要素・キーワード）から、再生するエフェクトの種類を決めて実行する。
+  // いりょく(power)に応じて演出の派手さ（粒の数・大きさ・発光）も変える。
+  // 新しい妖術を追加した場合も、名前に含まれるキーワードで自動的に近いエフェクトへ振り分けられる
+  function playMagicSkillEffect(actor, target, skillName, power){
+    const actorEl = getCharEl(actor);
+    const targetEl = getCharEl(target);
+    if(!targetEl) return;
+    const name = skillName || '';
+    const k = getFxIntensity(power);
+    // 完全一致の技名テーブル（既存の全妖術を網羅）
+    const exactTable = {
+      '大滝の術':   () => playWaterfallFx(targetEl, k),
+      '水流の術':   () => playWaterfallFx(targetEl, k),
+      'いん石の術': () => playRockFx(targetEl, k),
+      '落石の術':   () => playRockFx(targetEl, k),
+      '吹雪の術':   () => playIceFx(targetEl, k),
+      '氷結の術':   () => playIceFx(targetEl, k),
+      'れんごくの術': () => playFlameFx(targetEl, k),
+      '嵐の術':     () => playWindFx(targetEl, k),
+      '雷神の術':   () => playBoltFx(targetEl, k),
+      '死神の術':   () => playAbsorbFx(actorEl, targetEl, k),
+      '回復の術':   () => playLightFx(targetEl, k),
+      '極楽の術':   () => playLightFx(targetEl, k),
+    };
+    if(exactTable[name]){ exactTable[name](); return; }
+    // 未登録の技名は、名前に含まれるキーワードから近いエフェクトを推測する（将来追加される妖術にも対応）
+    if(name.includes('吸収') || name.includes('死神')){ playAbsorbFx(actorEl, targetEl, k); return; }
+    if(name.includes('滝') || name.includes('水') || name.includes('波')){ playWaterfallFx(targetEl, k); return; }
+    if(name.includes('石') || name.includes('岩') || name.includes('隕')){ playRockFx(targetEl, k); return; }
+    if(name.includes('氷') || name.includes('雪') || name.includes('吹雪')){ playIceFx(targetEl, k); return; }
+    if(name.includes('炎') || name.includes('火') || name.includes('ごく')){ playFlameFx(targetEl, k); return; }
+    if(name.includes('嵐') || name.includes('風')){ playWindFx(targetEl, k); return; }
+    if(name.includes('雷')){ playBoltFx(targetEl, k); return; }
+    if(name.includes('闇') || name.includes('斬')){ playSlashFx(targetEl, k); return; }
+    if(name.includes('回復') || name.includes('極楽') || name.includes('光')){ playLightFx(targetEl, k); return; }
+    playBurstFx(targetEl, k);
+  }
+
   function showActionBubble(actor, label){
     const el = getCharEl(actor);
     if(!el) return;
@@ -2924,7 +4427,15 @@ function startBattleField(){
   let pendingFaintVisuals = []; // このアクター行動中に気絶したが、まだ人魂ビジュアルにしていないキャラ
   function applyDamageTo(defender, rawDamage, ignoreGuard){
     const finalDamage = (defender.guarding && !ignoreGuard) ? Math.round(rawDamage * 0.5) : rawDamage;
-    defender.hp = Math.max(0, defender.hp - finalDamage);
+    let newHp = defender.hp - finalDamage;
+    // 「ガマン魂」：HPが0以下になる一撃を、一度だけHP1で耐える
+    if(newHp <= 0 && !defender.usedGamanSoul && hasEquipEffect(defender, 'enduranceOnce')){
+      newHp = 1;
+      defender.usedGamanSoul = true;
+      logLine(`${defender.name} の${defender.equipment.name}！ → こらえた！`);
+      showActionBubble(defender, 'こらえた！');
+    }
+    defender.hp = Math.max(0, newHp);
     updateHpBar(defender);
     if(defender.hp <= 0 && defender.alive){
       defender.alive = false;
@@ -2942,6 +4453,8 @@ function startBattleField(){
     // 前衛が全滅した側があれば、その場で強制的に前衛と後衛を入れ替える
     forceSwapIfFrontWiped();
     forceSwapEnemyIfFrontWiped();
+    // 誰かが倒れた／前衛が入れ替わったことで隣接関係が変わった可能性があるので、陣の見た目を全員分更新する
+    refreshAllZokuJinIndicators();
     return finalDamage;
   }
 
@@ -2958,27 +4471,39 @@ function startBattleField(){
     return alive[Math.floor(Math.random() * alive.length)];
   }
 
-  // 「おせわ」等、前衛の両隣にいる味方を自分の行動のたびに少しずつ回復するパッシブスキル。
-  // 自分が前衛（インデックス0〜2）にいる時だけ発動し、隣の位置（±1）の味方が対象。
-  function healNeighbors(actor){
-    if(!actor.skill || !actor.skill.neighborHeal) return;
-    const arr = actor.side === 'enemy' ? enemyParty : party;
-    const idx = arr.indexOf(actor);
-    if(idx < 0 || idx > 2) return; // 前衛にいる時だけ
-    const rate = actor.skill.neighborHealRate || 0.02;
+  // 「おせわ」等、両隣にいる味方を回復するパッシブスキル。
+  // 本来はスキル所持者自身が行動したときだけ発動していたが、
+  // 「誰かが行動するたび」に、場にいる所持者全員（自分自身が行動したときも含む）が発動するようにする。
+  // 前衛・後衛の区別なく、隊列上の隣（±1）が対象。
+  // healer は所持者、side はそのパーティ（'player'/'enemy'）を指定する。
+  function healNeighborsFor(healer, side){
+    if(!healer.alive || !healer.skill || !healer.skill.neighborHeal) return;
+    const arr = side === 'enemy' ? enemyParty : party;
+    const idx = arr.indexOf(healer);
+    if(idx < 0) return;
+    const rate = healer.skill.neighborHealRate || 0.02;
+    const healerZokuJin = getZokuJinMultiplier(healer);
+    const healerHealMult = (healerZokuJin && healerZokuJin.stat === 'heal') ? healerZokuJin.mult : 1;
     [idx - 1, idx + 1].forEach(i => {
-      if(i < 0 || i > 2) return;
+      if(i < 0 || i >= arr.length) return;
       const neighbor = arr[i];
       if(!neighbor || !neighbor.alive || neighbor.hp >= neighbor.maxHp) return;
-      const healAmount = Math.max(1, Math.round(neighbor.maxHp * rate));
+      const healAmount = Math.max(1, Math.round(neighbor.maxHp * rate * healerHealMult));
       const before = neighbor.hp;
       neighbor.hp = Math.min(neighbor.maxHp, neighbor.hp + healAmount);
       const healed = neighbor.hp - before;
       if(healed > 0){
         updateHpBar(neighbor);
-        logLine(`${actor.name} の${actor.skill.name}！ → ${neighbor.name} が${healed}HP回復した！`, 'heal');
+        logLine(`${healer.name} の${healer.skill.name}！ → ${neighbor.name} が${healed}HP回復した！`, 'heal');
       }
     });
+  }
+
+  // 誰か（actor）が行動するたびに呼ぶ。自陣・敵陣どちらの隣接ケアスキル持ちも、
+  // 前衛にいれば毎回発動する（actor自身がスキル持ちかどうかは問わない）。
+  function healNeighbors(actor){
+    party.forEach(c => healNeighborsFor(c, 'player'));
+    enemyParty.forEach(c => healNeighborsFor(c, 'enemy'));
   }
 
   // ---- 行動パターン ----
@@ -2991,8 +4516,24 @@ function startBattleField(){
     return all.some(c => c.alive && c.skill && c.skill.noSlackAura);
   }
 
+  // 場（自分・敵どちらでも）に「どんどんフィールド」等、敵味方全員の全ステータスをアップさせる
+  // パッシブスキルを持つ生きているキャラがいるかどうか（アップ幅も一緒に返す）。
+  function getAllStatsFieldBoostRate(){
+    const all = [...party, ...enemyParty];
+    let rate = 0;
+    all.forEach(c => {
+      if(c.alive && c.skill && c.skill.allStatsUpField){
+        rate = Math.max(rate, c.skill.allStatsUpField);
+      }
+    });
+    return rate;
+  }
+
   // サボりやすさ性格＋行動性格の重みに基づいて、このターンの行動を1つ選ぶ
   function chooseAction(actor){
+    // 「ガード魂」を装備している場合は、行動性格に関わらず常にガードを選ぶ
+    if(hasEquipEffect(actor, 'alwaysGuard')) return 'guard';
+
     const slackRate = isNoSlackAuraActive() ? 0 : ((actor.slackSeikaku && actor.slackSeikaku.rate) || 0);
     if(Math.random() < slackRate) return 'slack';
 
@@ -3059,13 +4600,18 @@ function startBattleField(){
       case 'physical': {
         const target = pickAttackTarget(opponents);
         showTargetArrow(target);
+        showActionBubble(actor, ACTION_LABELS.physical);
         const physicalElement = actor.physicalSkill && actor.physicalSkill.element;
         const hits = (actor.physicalSkill && actor.physicalSkill.hits) || 1;
-        performMultiHitAttack(actor, target, 'physical', BASIC_ATTACK_POWER, physicalElement, hits, '物理攻撃', finishAction);
+        // 吹き出しを見せてから少し間を置いてダメージを与える
+        setTimeout(() => {
+          performMultiHitAttack(actor, target, 'physical', BASIC_ATTACK_POWER, physicalElement, hits, '物理攻撃', finishAction);
+        }, ACTION_BUBBLE_DELAY_MS);
         return;
       }
       case 'magic': {
         const magicName = (actor.magicSkill && actor.magicSkill.name) || ACTION_LABELS.magic;
+        const magicPower = (actor.magicSkill && actor.magicSkill.power) || BASIC_ATTACK_POWER;
         showActionBubble(actor, magicName);
         if(isHealMagic){
           // 回復系の妖術：敵ではなく、自分の側で一番HP割合が低い前衛（自分含む）を回復する
@@ -3075,20 +4621,28 @@ function startBattleField(){
             ? injured.reduce((worst, c) => (c.hp / c.maxHp < worst.hp / worst.maxHp ? c : worst))
             : actor;
           showTargetArrow(healTarget);
-          const healAmount = calcMagicHeal(actor, BASIC_ATTACK_POWER);
-          const before = healTarget.hp;
-          healTarget.hp = Math.min(healTarget.maxHp, healTarget.hp + healAmount);
-          const healed = healTarget.hp - before;
-          updateHpBar(healTarget);
-          const skillName = actor.magicSkill && actor.magicSkill.name || '回復の術';
-          logLine(`${actor.name} の${skillName}！ → ${healTarget.name} が${healed}HP回復した！`, 'heal');
-          finishAction();
+          // 吹き出しを見せてから少し間を置いて回復を適用する
+          setTimeout(() => {
+            playMagicSkillEffect(actor, healTarget, magicName, magicPower);
+            const healAmount = calcMagicHeal(actor, BASIC_ATTACK_POWER);
+            const before = healTarget.hp;
+            healTarget.hp = Math.min(healTarget.maxHp, healTarget.hp + healAmount);
+            const healed = healTarget.hp - before;
+            updateHpBar(healTarget);
+            const skillName = actor.magicSkill && actor.magicSkill.name || '回復の術';
+            logLine(`${actor.name} の${skillName}！ → ${healTarget.name} が${healed}HP回復した！`, 'heal');
+            finishAction();
+          }, ACTION_BUBBLE_DELAY_MS);
           return;
         }
         const target = pickAttackTarget(opponents);
         showTargetArrow(target);
         const hits = (actor.magicSkill && actor.magicSkill.hits) || 1;
-        performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃', finishAction);
+        // 吹き出しを見せてから少し間を置いてダメージを与える
+        setTimeout(() => {
+          playMagicSkillEffect(actor, target, magicName, magicPower);
+          performMultiHitAttack(actor, target, 'magic', BASIC_ATTACK_POWER, magicElement, hits, '妖術攻撃', finishAction);
+        }, ACTION_BUBBLE_DELAY_MS);
         return;
       }
       case 'guard': {
@@ -3158,7 +4712,7 @@ function startBattleField(){
           }
           if(preset && preset.kind === kind && preset.dot){
             // 「継続ダメージ」系のとりつき：対象は自分の行動のたびにHPが少しずつ減っていくようになる
-            applyDotEffect(target, { name: preset.name, rate: preset.dotRate });
+            applyDotEffect(target, { name: preset.name, rate: preset.dotRate, powerMult: getZokuPossessPowerMult(actor) });
             logLine(`${actor.name} の${preset.name}！ → ${target.name} はじわじわHPが減っていくようになった！`);
             return;
           }
@@ -3171,7 +4725,7 @@ function startBattleField(){
             stat = ['chikara','mamori','youjutsu','subayasa'][Math.floor(Math.random()*4)];
             name = kind === 'buff' ? '通常アップ' : '通常ダウン';
           }
-          const effect = applyPossessEffect(target, { kind, grade, scope, stat, duration: kind === 'buff' ? 5 : 3, name });
+          const effect = applyPossessEffect(target, { kind, grade, scope, stat, duration: kind === 'buff' ? 5 : 3, name, powerMult: getZokuPossessPowerMult(actor) });
           if(effect){
             const gradeLabel = { small:'小', normal:'', large:'大', super:'超', ultimate:'究極' }[grade];
             const dirLabel = kind === 'buff' ? 'アップ' : 'ダウン';
@@ -3325,7 +4879,15 @@ function startBattleField(){
         updateHpBar(actor);
       }
       if(ult.buffAll){
-        applyPossessEffect(actor, { kind:'buff', grade:'large', scope:'all', duration: 5, name: ult.name });
+        applyPossessEffect(actor, { kind:'buff', grade:'large', scope:'all', duration: 5, name: ult.name, powerMult: getZokuPossessPowerMult(actor) });
+      }
+      // 「から傘バリケード」等：単一ステータスのみを指定倍率でアップさせる自己バフ（grade/scope/statを個別指定）
+      if(ult.selfBuff){
+        applyPossessEffect(actor, { kind:'buff', grade: ult.selfBuff.grade, scope: ult.selfBuff.scope, stat: ult.selfBuff.stat, duration: 5, name: ult.name, powerMult: getZokuPossessPowerMult(actor) });
+      }
+      // 「から傘バリケード」等：自分自身に挑発をかけ、常に狙われるようにする
+      if(ult.selfTaunt){
+        applyTauntEffect(actor, { duration: 5, name: ult.name });
       }
       logLine(`${actor.name} の${ult.name}！ → 自身が復活の力に満ちた！`, 'heal');
       done();
@@ -3345,7 +4907,9 @@ function startBattleField(){
           }
         });
       }
-      const healAmount = ult.healAll ? Math.round((getEffectiveStats(actor).youjutsu / 2 + 125) * (0.9 + Math.random()*0.2)) : 0;
+      const ultHealZokuJin = getZokuJinMultiplier(actor);
+      const ultHealMult = (ultHealZokuJin && ultHealZokuJin.stat === 'heal') ? ultHealZokuJin.mult : 1;
+      const healAmount = ult.healAll ? Math.round((getEffectiveStats(actor).youjutsu / 2 + 125) * ultHealMult * (0.9 + Math.random()*0.2)) : 0;
       frontSlots.forEach(c => {
         if(!c.alive) return;
         const before = c.hp;
@@ -3377,7 +4941,8 @@ function startBattleField(){
         targets.forEach(t => { if(t.alive) applyConfuseEffect(t, { name: `${ult.name}の混乱`, duration: 3 }); });
         logLine(`${ult.name}の余波で敵は混乱した！`);
       } else if(ult.debuff === 'all-stats-down'){
-        targets.forEach(t => { if(t.alive) applyPossessEffect(t, { kind:'debuff', grade:'large', scope:'all', duration: 3, name: `${ult.name}の呪縛` }); });
+        const ultPowerMult = getZokuPossessPowerMult(actor);
+        targets.forEach(t => { if(t.alive) applyPossessEffect(t, { kind:'debuff', grade:'large', scope:'all', duration: 3, name: `${ult.name}の呪縛`, powerMult: ultPowerMult }); });
         logLine(`${ult.name}の余波で敵の全ステータスがダウンした！`);
       }
       done();
@@ -3422,14 +4987,16 @@ function startBattleField(){
     if(turnQueue.length === 0){
       cpuMaybeRotate();
       const front = getFrontRowCombatants();
-      // 「閃光」等、一度だけ先制攻撃できるスキルを持つキャラがいれば、
+      // 「閃光」等、一度だけ先制攻撃できるスキル・装備（閃光魂）を持つキャラがいれば、
       // まだ使っていない場合に限り、その回だけ行動順の先頭に割り込ませる。
-      const preemptChar = front.find(c => c.alive && c.skill && c.skill.preemptiveStrike && !c.usedPreemptiveStrike);
+      const preemptChar = front.find(c => c.alive && !c.usedPreemptiveStrike &&
+        ((c.skill && c.skill.preemptiveStrike) || hasEquipEffect(c, 'preemptiveStrike')));
       if(preemptChar){
         preemptChar.usedPreemptiveStrike = true;
         const rest = getTurnOrder(front.filter(c => c !== preemptChar));
         turnQueue = [preemptChar, ...rest];
-        logLine(`${preemptChar.name} の${preemptChar.skill.name}！ → 先制攻撃！`);
+        const preemptSkillName = (preemptChar.skill && preemptChar.skill.preemptiveStrike) ? preemptChar.skill.name : preemptChar.equipment.name;
+        logLine(`${preemptChar.name} の${preemptSkillName}！ → 先制攻撃！`);
       } else {
         turnQueue = getTurnOrder(front);
       }
@@ -3474,14 +5041,14 @@ function startBattleField(){
   let ultSelectMode = false;
 
   function getAllUltReadyAllies(){
-    return party.filter(c => c.alive && c.ult >= ULT_MAX);
+    return party.filter(c => c.alive && c.ult >= ULT_MAX && !hasDebuffEffect(c));
   }
 
   function refreshUltReadyHighlights(){
     party.forEach(c => {
       const el = elements[c.id];
       if(!el) return;
-      const ready = c.alive && c.ult >= ULT_MAX;
+      const ready = c.alive && c.ult >= ULT_MAX && !hasDebuffEffect(c);
       el.classList.toggle('ult-ready', ready && !ultSelectMode);
       el.classList.toggle('ult-selectable', ready && ultSelectMode);
     });
@@ -3489,8 +5056,10 @@ function startBattleField(){
 
   function setUltSelectMode(on){
     ultSelectMode = on;
+    if(on && typeof setOharaiSelectMode === 'function') setOharaiSelectMode(false); // おはらい選択とは排他
     wazaBtn.classList.toggle('ult-armed', on);
     ultSelectHint.style.display = on ? 'block' : 'none';
+    commandBar.classList.toggle('selection-passthrough', on);
     refreshUltReadyHighlights();
   }
 
@@ -3514,8 +5083,68 @@ function startBattleField(){
     el.addEventListener('click', () => {
       if(!ultSelectMode) return;
       if(!c.alive || c.ult < ULT_MAX) return;
+      if(hasDebuffEffect(c)){
+        logLine(`${c.name} はデバフを受けていて必殺技を発動できない…`);
+        return;
+      }
       setUltSelectMode(false);
       startUltChargeMinigame(c);
+    });
+  });
+
+  // ============================================================
+  // 「おはらい」ボタン：後衛にいるデバフ中の味方を選んで、とりつきを解除するミニゲーム
+  // ============================================================
+  const oharaiBtn = document.querySelector('.battle-screen .btn-oharai');
+  const oharaiSelectHint = document.getElementById('oharaiSelectHint');
+  let oharaiSelectMode = false;
+
+  // 後衛（インデックス3〜5）にいて、かつデバフを受けている生存中の味方だけが対象
+  function getBackRowDebuffedAllies(){
+    return party.filter((c, idx) => idx >= 3 && c.alive && hasDebuffEffect(c));
+  }
+
+  function refreshOharaiSelectableHighlights(){
+    party.forEach((c, idx) => {
+      const el = elements[c.id];
+      if(!el) return;
+      const eligible = idx >= 3 && c.alive && hasDebuffEffect(c);
+      el.classList.toggle('oharai-selectable', eligible && oharaiSelectMode);
+    });
+  }
+
+  function setOharaiSelectMode(on){
+    oharaiSelectMode = on;
+    if(on && typeof setUltSelectMode === 'function') setUltSelectMode(false); // 必殺技選択とは排他
+    oharaiBtn.classList.toggle('oharai-armed', on);
+    oharaiSelectHint.style.display = on ? 'block' : 'none';
+    commandBar.classList.toggle('selection-passthrough', on);
+    refreshOharaiSelectableHighlights();
+  }
+
+  oharaiBtn.addEventListener('click', () => {
+    if(battleOver) return;
+    if(!oharaiSelectMode){
+      const targets = getBackRowDebuffedAllies();
+      if(targets.length === 0){
+        logLine('後衛にデバフを受けているキャラがいない…');
+        return;
+      }
+      setOharaiSelectMode(true);
+    } else {
+      setOharaiSelectMode(false);
+    }
+  });
+
+  party.forEach((c, idx) => {
+    const el = elements[c.id];
+    if(!el) return;
+    el.addEventListener('click', () => {
+      if(!oharaiSelectMode) return;
+      if(idx < 3) return; // 前衛は対象外
+      if(!c.alive || !hasDebuffEffect(c)) return;
+      setOharaiSelectMode(false);
+      startOharaiMinigame(c);
     });
   });
 
@@ -3711,6 +5340,11 @@ function startBattleField(){
         if(state.hit) return;
         state.hit = true;
         disc.classList.add('hit');
+        // タップ済みの円盤はポインタイベントを無効化し、透明になったあとDOMから完全に取り除く。
+        // これをしないと、透明な当たり判定だけが残り続けて後から重なる円盤へのタップを奪ってしまい、
+        // 「打つたびに飛び交う範囲がどんどん狭くなる」ように見えるバグの原因になっていた。
+        disc.style.pointerEvents = 'none';
+        setTimeout(() => { if(disc.parentNode) disc.parentNode.removeChild(disc); }, 200);
         remaining--;
         setUltProgress((DISC_COUNT - remaining) / DISC_COUNT);
         if(remaining <= 0){
@@ -3997,6 +5631,493 @@ function startBattleField(){
       window.removeEventListener('pointerup', onUp);
     }
     currentMinigameCleanup = cleanup;
+  }
+
+  // ============================================================
+  // おはらい・ミニゲーム本体
+  // ============================================================
+  const oharaiOverlay = document.getElementById('oharaiOverlay');
+  const oharaiFrame = document.getElementById('oharaiFrame');
+  const oharaiMist = document.getElementById('oharaiMist');
+  const oharaiInstruction = document.getElementById('oharaiInstruction');
+  const oharaiCasterName = document.getElementById('oharaiCasterName');
+  const oharaiOverlayTitle = document.getElementById('oharaiOverlayTitle');
+  const oharaiProgressFg = document.getElementById('oharaiProgressFg');
+  const OHARAI_PROGRESS_CIRC = 2 * Math.PI * 150;
+  let currentOharaiMinigameCleanup = null;
+
+  function setOharaiProgress(ratio){
+    const clamped = Math.max(0, Math.min(1, ratio));
+    oharaiProgressFg.style.strokeDashoffset = String(OHARAI_PROGRESS_CIRC * (1 - clamped));
+    // 進み具合に応じて紫のモヤを薄くしていき、完了で完全に晴れるようにする
+    if(oharaiMist) oharaiMist.style.opacity = String(1 - clamped);
+  }
+
+  // ミニゲーム用に差し込んだ子要素だけを取り除く（モヤ用の oharaiMist は残す）
+  function clearOharaiFrameContent(){
+    Array.from(oharaiFrame.children).forEach(child => {
+      if(child !== oharaiMist) child.remove();
+    });
+  }
+
+  const OHARAI_MINIGAMES = ['spin', 'crush', 'mash', 'slash'];
+  const OHARAI_LUCKY_CHANCE = 0.05; // 低確率（5%）で「超ラッキー！」
+
+  function startOharaiMinigame(actor){
+    oharaiCasterName.textContent = `${actor.name} のおはらい！`;
+    clearOharaiFrameContent();
+    setOharaiProgress(0);
+    oharaiOverlay.classList.add('active');
+
+    function finishOharai(){
+      if(currentOharaiMinigameCleanup){ currentOharaiMinigameCleanup(); currentOharaiMinigameCleanup = null; }
+      oharaiOverlay.classList.remove('active');
+      clearOharaiFrameContent();
+      onOharaiComplete(actor);
+    }
+
+    if(Math.random() < OHARAI_LUCKY_CHANCE){
+      startOharaiLuckyMinigame(finishOharai);
+      return;
+    }
+    const kind = OHARAI_MINIGAMES[Math.floor(Math.random() * OHARAI_MINIGAMES.length)];
+    if(kind === 'spin') startOharaiSpinMinigame(finishOharai);
+    else if(kind === 'crush') startOharaiCrushMinigame(finishOharai);
+    else if(kind === 'mash') startOharaiMashMinigame(finishOharai);
+    else startOharaiSlashMinigame(finishOharai);
+  }
+
+  // おはらい成功時：そのキャラのデバフ（とりつき）をすべて取り除く
+  function onOharaiComplete(actor){
+    const hadDebuff = !!(actor.possessEffects && actor.possessEffects.some(e => e.kind === 'debuff'));
+    if(actor.possessEffects){
+      actor.possessEffects = actor.possessEffects.filter(e => e.kind !== 'debuff');
+    }
+    updateAuraEffect(actor);
+    if(hadDebuff){
+      logLine(`${actor.name} のおはらいが成功！ 取り憑きが解けた！`, 'heal');
+    } else {
+      logLine(`${actor.name} のおはらいが完了した！`, 'heal');
+    }
+  }
+
+  // ---- 「まわせ！」：指でぐるぐる回してモヤを晴らす ----
+  function startOharaiSpinMinigame(onComplete){
+    oharaiOverlayTitle.textContent = 'おはらい「まわせ！」';
+    oharaiInstruction.textContent = '指でぐるぐる回してモヤを晴らそう！';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 320 320');
+    svg.classList.add('ult-spin-svg');
+    const track = document.createElementNS(svgNS, 'circle');
+    track.setAttribute('cx','160'); track.setAttribute('cy','160'); track.setAttribute('r','110');
+    track.classList.add('ult-spin-track');
+    svg.appendChild(track);
+    const dot = document.createElementNS(svgNS, 'circle');
+    dot.setAttribute('r','12');
+    dot.classList.add('ult-spin-dot');
+    svg.appendChild(dot);
+    oharaiFrame.appendChild(svg);
+
+    let dragging = false;
+    let lastAngle = null;
+    let totalRotation = 0;
+    const NEEDED_ROTATION = Math.PI * 2 * 10; // 10周分
+
+    function angleFromEvent(ev){
+      const rect = svg.getBoundingClientRect();
+      const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+      return Math.atan2(ev.clientY - cy, ev.clientX - cx);
+    }
+    function updateDot(angle){
+      dot.setAttribute('cx', 160 + 110*Math.cos(angle));
+      dot.setAttribute('cy', 160 + 110*Math.sin(angle));
+    }
+    updateDot(-Math.PI/2);
+
+    function onDown(ev){ dragging = true; lastAngle = angleFromEvent(ev); }
+    function onMove(ev){
+      if(!dragging) return;
+      const angle = angleFromEvent(ev);
+      let delta = angle - lastAngle;
+      if(delta > Math.PI) delta -= Math.PI*2;
+      if(delta < -Math.PI) delta += Math.PI*2;
+      totalRotation += Math.abs(delta);
+      lastAngle = angle;
+      updateDot(angle);
+      setOharaiProgress(totalRotation / NEEDED_ROTATION);
+      if(totalRotation >= NEEDED_ROTATION){
+        cleanup();
+        setTimeout(onComplete, 200);
+      }
+    }
+    function onUp(){ dragging = false; lastAngle = null; }
+    svg.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+
+    function cleanup(){
+      svg.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    currentOharaiMinigameCleanup = cleanup;
+  }
+
+  // ---- 「つぶせ！」：飛び交う紫のブロブをすべてタップしてつぶす ----
+  function startOharaiCrushMinigame(onComplete){
+    oharaiOverlayTitle.textContent = 'おはらい「つぶせ！」';
+    oharaiInstruction.textContent = '飛び交うブロブをすべてつぶそう！';
+    const BLOB_COUNT = 8;
+    const frameW = 320, frameH = 320;
+    const blobs = [];
+    let remaining = BLOB_COUNT;
+    let rafId = null;
+    let stopped = false;
+
+    for(let i = 0; i < BLOB_COUNT; i++){
+      const blob = document.createElement('div');
+      blob.className = 'oharai-blob';
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.4 + Math.random() * 1.6;
+      const state = {
+        el: blob,
+        x: 60 + Math.random() * (frameW - 120),
+        y: 60 + Math.random() * (frameH - 120),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        hit: false
+      };
+      blob.addEventListener('pointerdown', (ev) => {
+        ev.stopPropagation();
+        if(state.hit) return;
+        state.hit = true;
+        blob.classList.add('crushed');
+        // タップ済みのブロブはポインタイベントを無効化し、消えたらDOMから完全に取り除く
+        // （「打て！」の円盤バグと同じ問題を防ぐため）
+        blob.style.pointerEvents = 'none';
+        setTimeout(() => { if(blob.parentNode) blob.parentNode.removeChild(blob); }, 200);
+        remaining--;
+        setOharaiProgress((BLOB_COUNT - remaining) / BLOB_COUNT);
+        if(remaining <= 0){
+          stopped = true;
+          if(rafId) cancelAnimationFrame(rafId);
+          setTimeout(onComplete, 250);
+        }
+      });
+      oharaiFrame.appendChild(blob);
+      blobs.push(state);
+    }
+
+    function tick(){
+      if(stopped) return;
+      blobs.forEach(s => {
+        if(s.hit) return;
+        s.x += s.vx; s.y += s.vy;
+        if(s.x < 24 || s.x > frameW - 24) s.vx *= -1;
+        if(s.y < 24 || s.y > frameH - 24) s.vy *= -1;
+        s.el.style.left = s.x + 'px';
+        s.el.style.top = s.y + 'px';
+      });
+      rafId = requestAnimationFrame(tick);
+    }
+    tick();
+
+    currentOharaiMinigameCleanup = () => { stopped = true; if(rafId) cancelAnimationFrame(rafId); };
+  }
+
+  // ---- 「連打！」：紫の氷塊をアイスピックでつつく。ランダムな急所を突くと大ダメージ ----
+  function startOharaiMashMinigame(onComplete){
+    oharaiOverlayTitle.textContent = 'おはらい「連打！」';
+    oharaiInstruction.textContent = '氷をアイスピックでつつこう！';
+    const NEEDED_DAMAGE = 22;   // 通常ヒットの合計換算値でクリアに必要な量
+    const NORMAL_HIT = 1;
+    const WEAKPOINT_HIT = 4;    // 急所ヒットは大きく進む
+    const WEAKPOINT_COUNT = 3;  // 見た目ではわからない急所の数
+    const WEAKPOINT_RADIUS = 16; // 判定半径(px, フレーム座標系)
+    const FRAME_SIZE = 320;
+    let damage = 0;
+    let finished = false;
+
+    const ice = document.createElement('div');
+    ice.className = 'oharai-ice-block';
+    oharaiFrame.appendChild(ice);
+
+    const pick = document.createElement('div');
+    pick.className = 'oharai-icepick';
+    pick.textContent = '🧊';
+    oharaiFrame.appendChild(pick);
+
+    // 見た目ではわからないランダムな急所座標を生成
+    const weakpoints = [];
+    for(let i = 0; i < WEAKPOINT_COUNT; i++){
+      weakpoints.push({
+        x: 60 + Math.random() * (FRAME_SIZE - 120),
+        y: 60 + Math.random() * (FRAME_SIZE - 120),
+        used: false
+      });
+    }
+
+    function showHitEffect(x, y, isWeak){
+      const fx = document.createElement('div');
+      fx.className = isWeak ? 'oharai-ice-crack weak' : 'oharai-ice-crack';
+      fx.style.left = x + 'px';
+      fx.style.top = y + 'px';
+      oharaiFrame.appendChild(fx);
+      setTimeout(() => { if(fx.parentNode) fx.parentNode.removeChild(fx); }, isWeak ? 500 : 300);
+      if(isWeak){
+        oharaiInstruction.textContent = '急所ヒット！ 効果てきめん！';
+        ice.classList.add('crit-flash');
+        setTimeout(() => ice.classList.remove('crit-flash'), 220);
+        setTimeout(() => { if(!finished) oharaiInstruction.textContent = '氷をアイスピックでつつこう！'; }, 500);
+      }
+    }
+
+    function onDown(ev){
+      ev.preventDefault();
+      if(finished) return;
+      const rect = oharaiFrame.getBoundingClientRect();
+      const x = ((ev.clientX - rect.left) / rect.width) * FRAME_SIZE;
+      const y = ((ev.clientY - rect.top) / rect.height) * FRAME_SIZE;
+
+      pick.style.left = x + 'px';
+      pick.style.top = y + 'px';
+      pick.classList.add('jab');
+      setTimeout(() => pick.classList.remove('jab'), 120);
+
+      let hitWeak = false;
+      for(const wp of weakpoints){
+        if(wp.used) continue;
+        const dx = x - wp.x, dy = y - wp.y;
+        if(Math.sqrt(dx*dx + dy*dy) <= WEAKPOINT_RADIUS){
+          wp.used = true;
+          hitWeak = true;
+          break;
+        }
+      }
+
+      damage += hitWeak ? WEAKPOINT_HIT : NORMAL_HIT;
+      showHitEffect(x, y, hitWeak);
+      setOharaiProgress(damage / NEEDED_DAMAGE);
+
+      // ダメージが蓄積するほど氷にヒビが増えていく演出
+      const crackStage = Math.min(3, Math.floor((damage / NEEDED_DAMAGE) * 3));
+      ice.classList.toggle('cracked-1', crackStage >= 1);
+      ice.classList.toggle('cracked-2', crackStage >= 2);
+      ice.classList.toggle('cracked-3', crackStage >= 3);
+
+      if(damage >= NEEDED_DAMAGE){
+        finished = true;
+        cleanup();
+        shatterIceAndComplete();
+      }
+    }
+    oharaiFrame.addEventListener('pointerdown', onDown);
+
+    // 紫の氷を割って砕け散らせてからおはらい完了とする
+    function shatterIceAndComplete(){
+      oharaiInstruction.textContent = '氷が割れた！';
+      pick.style.display = 'none';
+      ice.classList.add('shatter');
+
+      // 割れた瞬間に飛び散る氷の破片を生成
+      const SHARD_COUNT = 14;
+      for(let i = 0; i < SHARD_COUNT; i++){
+        const shard = document.createElement('div');
+        shard.className = 'oharai-ice-shard';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 90;
+        shard.style.setProperty('--dx', (Math.cos(angle) * dist) + 'px');
+        shard.style.setProperty('--dy', (Math.sin(angle) * dist) + 'px');
+        shard.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+        shard.style.left = (50 + (Math.random()*30 - 15)) + '%';
+        shard.style.top = (50 + (Math.random()*30 - 15)) + '%';
+        oharaiFrame.appendChild(shard);
+      }
+      setOharaiProgress(1);
+      setTimeout(onComplete, 550);
+    }
+
+    function cleanup(){
+      oharaiFrame.removeEventListener('pointerdown', onDown);
+    }
+    currentOharaiMinigameCleanup = cleanup;
+  }
+
+  // ---- 「斬れ！」：枠内のくすんだ鎖を何本かスワイプで断ち切る。切れ目を狙えば一発 ----
+  function startOharaiSlashMinigame(onComplete){
+    oharaiOverlayTitle.textContent = 'おはらい「斬れ！」';
+    oharaiInstruction.textContent = '鎖をまたぐようにスワイプして斬ろう！';
+    const MIN_DISTANCE = 60;   // これ未満の移動距離はスワイプと認めない
+    const MAX_DURATION = 600;  // これより時間がかかったスワイプは認めない（ms）
+    const FRAME_SIZE = 320;
+    const CHAIN_COUNT = 3 + Math.floor(Math.random() * 2); // 3〜4本
+    const CHAIN_COLORS = ['#6b6458', '#5c6b5e', '#5f5a6b', '#6b5c52', '#565f6b'];
+    let finished = false;
+    let chainsRemaining = CHAIN_COUNT;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${FRAME_SIZE} ${FRAME_SIZE}`);
+    svg.classList.add('oharai-slash-svg');
+    oharaiFrame.appendChild(svg);
+
+    // ---- 鎖を生成：枠内にランダムな向きで配置。各鎖はいくつかのリンクに分割し、
+    //      そのうち1つの区間を「切れ目」として、そこを斬れば一発で切断できる。
+    const chains = [];
+    function buildChain(){
+      const margin = 46;
+      const cx = margin + Math.random() * (FRAME_SIZE - margin*2);
+      const cy = margin + Math.random() * (FRAME_SIZE - margin*2);
+      const angle = Math.random() * Math.PI;
+      const length = 150 + Math.random() * 70;
+      const dx = Math.cos(angle), dy = Math.sin(angle);
+      const x1 = cx - dx*length/2, y1 = cy - dy*length/2;
+      const x2 = cx + dx*length/2, y2 = cy + dy*length/2;
+
+      const LINK_COUNT = 6;
+      const cutIndex = Math.floor(Math.random() * LINK_COUNT); // この区間が切れ目
+      const color = CHAIN_COLORS[Math.floor(Math.random() * CHAIN_COLORS.length)];
+
+      const group = document.createElementNS(svgNS, 'g');
+      group.classList.add('oharai-chain-group');
+      const links = [];
+      let hitsNeeded = 3; // 通常は複数回スワイプで断ち切る
+      let hitsTaken = 0;
+      let severed = false;
+
+      for(let i = 0; i < LINK_COUNT; i++){
+        const t0 = i / LINK_COUNT, t1 = (i+1) / LINK_COUNT;
+        const lx1 = x1 + (x2-x1)*t0, ly1 = y1 + (y2-y1)*t0;
+        const lx2 = x1 + (x2-x1)*t1, ly2 = y1 + (y2-y1)*t1;
+        const link = document.createElementNS(svgNS, 'line');
+        link.setAttribute('x1', lx1); link.setAttribute('y1', ly1);
+        link.setAttribute('x2', lx2); link.setAttribute('y2', ly2);
+        link.classList.add('oharai-chain-link');
+        link.style.stroke = color;
+        if(i === cutIndex) link.classList.add('cutpoint');
+        group.appendChild(link);
+        links.push({ el: link, x1: lx1, y1: ly1, x2: lx2, y2: ly2, isCut: i === cutIndex });
+      }
+      svg.appendChild(group);
+
+      chains.push({ group, links, x1, y1, x2, y2, hitsNeeded, hitsTaken: 0, severed: false });
+    }
+    for(let i = 0; i < CHAIN_COUNT; i++) buildChain();
+
+    function segmentsIntersect(p1, p2, p3, p4){
+      function cross(ax,ay,bx,by){ return ax*by - ay*bx; }
+      const d1x = p2[0]-p1[0], d1y = p2[1]-p1[1];
+      const d2x = p4[0]-p3[0], d2y = p4[1]-p3[1];
+      const denom = cross(d1x, d1y, d2x, d2y);
+      if(Math.abs(denom) < 1e-6) return false;
+      const t = cross(p3[0]-p1[0], p3[1]-p1[1], d2x, d2y) / denom;
+      const u = cross(p3[0]-p1[0], p3[1]-p1[1], d1x, d1y) / denom;
+      return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+    }
+
+    function severChain(chain){
+      chain.severed = true;
+      chain.group.classList.add('severed');
+      chainsRemaining--;
+      setOharaiProgress((CHAIN_COUNT - chainsRemaining) / CHAIN_COUNT);
+      if(chainsRemaining <= 0){
+        finished = true;
+        cleanup();
+        setTimeout(onComplete, 250);
+      }
+    }
+
+    let startPt = null;
+    let startTime = 0;
+
+    function svgPoint(ev){
+      const rect = svg.getBoundingClientRect();
+      const x = ((ev.clientX - rect.left) / rect.width) * FRAME_SIZE;
+      const y = ((ev.clientY - rect.top) / rect.height) * FRAME_SIZE;
+      return [x, y];
+    }
+    function onDown(ev){
+      if(finished) return;
+      startPt = svgPoint(ev);
+      startTime = performance.now();
+    }
+    function onUp(ev){
+      if(finished || !startPt) return;
+      const endPt = svgPoint(ev);
+      const dt = performance.now() - startTime;
+      const dx = endPt[0]-startPt[0], dy = endPt[1]-startPt[1];
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if(dist >= MIN_DISTANCE && dt <= MAX_DURATION){
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', startPt[0]); line.setAttribute('y1', startPt[1]);
+        line.setAttribute('x2', endPt[0]); line.setAttribute('y2', endPt[1]);
+        line.classList.add('oharai-slash-line');
+        svg.appendChild(line);
+        setTimeout(() => { if(line.parentNode) line.parentNode.removeChild(line); }, 350);
+
+        // このスワイプが跨いだ鎖のリンクを判定
+        chains.forEach(chain => {
+          if(chain.severed) return;
+          let crossedCut = false;
+          let crossedAny = false;
+          chain.links.forEach(link => {
+            if(segmentsIntersect(startPt, endPt, [link.x1, link.y1], [link.x2, link.y2])){
+              crossedAny = true;
+              if(link.isCut) crossedCut = true;
+            }
+          });
+          if(crossedCut){
+            // 切れ目をピンポイントで斬った → 一発で切断
+            severChain(chain);
+          } else if(crossedAny){
+            chain.hitsTaken++;
+            chain.group.classList.add('nicked');
+            setTimeout(() => chain.group.classList.remove('nicked'), 150);
+            if(chain.hitsTaken >= chain.hitsNeeded){
+              severChain(chain);
+            }
+          }
+        });
+      }
+      startPt = null;
+    }
+    svg.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+
+    function cleanup(){
+      svg.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+    }
+    currentOharaiMinigameCleanup = cleanup;
+  }
+
+  // ---- 「超ラッキー！」：低確率で出現。モヤは無く、金色オーブをタップするだけで完了 ----
+  function startOharaiLuckyMinigame(onComplete){
+    oharaiOverlayTitle.textContent = 'おはらい「超ラッキー！」';
+    oharaiInstruction.textContent = '光るオーブをタップ！';
+    // このミニゲームだけはモヤをあらかじめ完全に晴らしておく
+    if(oharaiMist) oharaiMist.style.opacity = '0';
+    oharaiProgressFg.style.strokeDashoffset = '0';
+
+    const orb = document.createElement('div');
+    orb.className = 'oharai-lucky-orb';
+    oharaiFrame.appendChild(orb);
+
+    let finished = false;
+    function onDown(ev){
+      ev.stopPropagation();
+      if(finished) return;
+      finished = true;
+      cleanup();
+      setTimeout(onComplete, 150);
+    }
+    orb.addEventListener('pointerdown', onDown);
+
+    function cleanup(){
+      orb.removeEventListener('pointerdown', onDown);
+    }
+    currentOharaiMinigameCleanup = cleanup;
   }
 
   logLine('自動戦闘を開始します。前衛キャラがすばやさ順に行動します。');
